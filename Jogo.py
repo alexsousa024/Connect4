@@ -61,7 +61,7 @@ class Board:
                 
         return False 
     
-
+    #FALTA TESTAR O EMPATE (IMPOSSIVEL) 
     def is_full(self):
         for r in range(ROW_COUNT):
             for c in range(COL_COUNT):
