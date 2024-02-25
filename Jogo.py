@@ -40,7 +40,7 @@ class Board:
         #Verificar horizontal
         for c in range(COL_COUNT-3):
             for r in range(ROW_COUNT):
-                if self.board[r][c] == player and self.board[r][c+1] == player and self.board[r][c+1] == player and self-board[r][c+1] == player:
+                if self.board[r][c] == player and self.board[r][c+1] == player and self.board[r][c+2] == player and self.board[r][c+3] == player:
                     return True
         #Verificar vertical
                 
@@ -50,28 +50,25 @@ class Board:
                     return True
         #Verificar diagonal com declive positivo
         for c in range(COL_COUNT - 3):
-            for r in range(ROW_COUNT -3):
-                if self.board[r][c] == player and self.board[r+1][c+1] == player and self.board[r+2][c+2] == player and self.board[r+3][c+3] == player: 
+            for r in range(3,ROW_COUNT):
+                if self.board[r][c] == player and self.board[r-1][c+1] == player and self.board[r-2][c+2] == player and self.board[r-3][c+3] == player: 
                     return True 
         #Verificar diagonal com decline negativo 
         for c in range(COL_COUNT - 3):
-            for r in range(3,ROW_COUNT):
-                if self.board[r][c] == player and self.board[r-1][c+1] == player and self.board[r-2][c+2] == player and self.board[r-3][c+3] == player: 
+            for r in range(3):
+                if self.board[r][c] == player and self.board[r+1][c+1] == player and self.board[r+2][c+2] == player and self.board[r+3][c+3] == player: 
                     return True
                 
-        return False
-        
+        return False 
+    
+
     def is_full(self):
         for r in range(ROW_COUNT):
             for c in range(COL_COUNT):
                 if self.board[r][c] == 0:
                     return False
         return True
-   
-    
-
-
-                
+            
 
 
 board = Board()
@@ -80,7 +77,7 @@ board.print_board()
 
 while not game_over:
 
-    if board.is_full():
+    if board.is_full(): 
         game_over = 1
 
     if board.player ==  1:
