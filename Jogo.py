@@ -3,7 +3,7 @@ import pygame
 import sys
 from algoritmos import Connect4Game 
 import heapq
-
+import copy
 
 # Initialize Pygame
 pygame.init()
