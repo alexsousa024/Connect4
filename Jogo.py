@@ -2,6 +2,8 @@ import numpy as np
 import pygame
 import sys
 from algoritmos import Connect4Game 
+import heapq
+
 
 # Initialize Pygame
 pygame.init()
