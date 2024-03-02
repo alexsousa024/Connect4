@@ -4,10 +4,11 @@ ROW_COUNT = 6
 COL_COUNT = 7 
 
 class Connect4Game: 
-    def __init__(self,player_1,player_2,board): 
+    def __init__(self,player_1,player_2,board depth): 
         self.board = board
         self.player_1 = player_1
         self.player_2 = player_2 
+        self.depth = depth
 
 #POR A CONDICAO DE WINNING_MOVE 
 #E POR NA HEURISTICA 
