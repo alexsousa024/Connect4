@@ -115,3 +115,10 @@ class Connect4Game:
         
         return total_score
 
+    def heuristic_function(self, state):
+        return self.final_heuristic_1(self.player_1, self.player_2)
+    
+    def cost_function(self, state):
+        return state.depth
+
+
