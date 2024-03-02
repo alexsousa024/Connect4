@@ -32,7 +32,7 @@ class Board:
         self.board = np.zeros((ROW_COUNT, COL_COUNT))
         self.column_heights = np.full(COL_COUNT, ROW_COUNT - 1, dtype=int)
         self.game_over = False
-        self.turn = 0  # Player 1 starts
+        self.turn = 1  # Player 1 starts
 
     def drop_pieces(self, player , col):
         if self.valid_col(col):
@@ -103,7 +103,7 @@ def draw_board(board):
 
 board = Board()
 
-IA = Connect4Game(1,2,board.board)
+IA = Connect4Game(1,2,board.board, 0)
 
 #Algoritmo A*
 def astar_algorithm(self):
@@ -133,8 +133,21 @@ def astar_algorithm(self):
 
                 heapq.heappush(priority_queue, (total_cost, successor_state))
 
-def generate_sucessors(self, state):
-    pass
+def generate_sucessors(self):
+    sucessors = []
+    for col in range(COL_COUNT):
+        if self.board.valid_col(col):
+            new_board = copy.deepcopy(self.board)
+            new_board.drop_pieces(self.turn, col)
+
+            new_game = Connect4Game(self.player_1, self.player_2, new_board, self.depth +1)
+            new_game.switch_players()
+            sucessors.append(new_game)
+    return sucessors
+
+
+def switch_players(self):
+    self.turn = 3 - self.turn
 
 
 
@@ -152,14 +165,14 @@ while not board.game_over:
             col = int(x_pos // SQUARESIZE)
 
 
-            if board.turn == 0:
+            if board.turn == 1:
                 if board.drop_pieces(1, col):
                     print(IA.final_heuristic_1(1,2))
                     board.print_board() 
                     if board.win(1):
                         print("Player 1 wins!")
                         board.game_over = True
-                    board.turn = 1 - board.turn  # Switch turns
+                    board.turn = 3 - board.turn  # Switch turns
             else:
                 if board.drop_pieces(2, col):
                     print(IA.final_heuristic_1(1,2))
@@ -167,7 +180,7 @@ while not board.game_over:
                     if board.win(2):
                         print("Player 2 wins!")
                         board.game_over = True
-                    board.turn = 1 - board.turn  # Switch turns
+                    board.turn = 3 - board.turn  # Switch turns
 
     draw_board(board)  # Draw the board state at every loop iteration
     
