@@ -103,7 +103,37 @@ board = Board()
 
 IA = Connect4Game(1,2,board.board)
 
-#Algoritmo A* 
+#Algoritmo A*
+def astar_algorithm(self):
+        start_state = self.board
+
+        priority_queue = [(0,start_state)]
+        visited_states = set()
+
+        while priority_queue:
+            current_cost, current_state = heapq.heappop(priority_queue)
+            
+
+            if board.is_full or board.game_over:
+                return 
+            
+            if current_state in visited_states:
+                continue
+
+            visited_states.add(current_state)
+
+            sucessors = self.generate_sucessors(current_state)
+
+            for successor_state in sucessors:
+                heuristic = self.heuristic_function(successor_state)
+                cost_to_sucessor = self.cost_function(successor_state)
+                total_cost = heuristic + cost_to_sucessor + current_cost
+
+                heapq.heappush(priority_queue, (total_cost, successor_state))
+
+def generate_sucessors(self, state):
+    pass
+
 
 
 #Funcao da heuristica #1 
