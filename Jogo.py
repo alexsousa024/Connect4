@@ -58,7 +58,7 @@ class Board:
                 
         for c in range(COL_COUNT):
             for r in range(ROW_COUNT - 3):
-                if self.board[r][c] == player and self.board[r+1][c] == player and self.board[r+2][c] and self.board[r+3][c] == player: 
+                if self.board[r][c] == player and self.board[r+1][c] == player and self.board[r+2][c] == player and self.board[r+3][c] == player: 
                     return True
                 
         #Verificar diagonal com declive positivo
@@ -155,9 +155,9 @@ def board_evaluation(board,player_1,player_2):
         for r in range(ROW_COUNT):
             for c in range(COL_COUNT):
                 if board[r][c] == player_1:  # Posição ocupada pelo jogador 1
-                    player_score -= board_score_matrix[r][c]
+                    player_score -= 10* board_score_matrix[r][c]
                 elif board[r][c] == player_2:  # Posição ocupada pelo jogador 2
-                    player_score += board_score_matrix[r][c]
+                    player_score += 10* board_score_matrix[r][c]
         
         return player_score
 
@@ -200,7 +200,7 @@ def final_heuristic_1(board,player_1, player_2):
 
         eval_score = evaluate_function_1(board)
         board_score = board_evaluation(board,player_1,player_2)
-        total_score = eval_score + board_score
+        total_score = eval_score + board_score                           
         return total_score
 
 def astar_algorithm(board, player):
@@ -214,7 +214,7 @@ def astar_algorithm(board, player):
        
         current_score = final_heuristic_1(current_board.board,1,2)
         
-        print(current_score)
+        #print(current_score)
         if current_score > best_score:
             best_score = current_score
             best_move = move
@@ -224,18 +224,22 @@ def astar_algorithm(board, player):
 
         # Gera os sucessores do estado atual
         successors = generate_sucessors(current_board, player)
-        print(successors)
+        #print(successors)
+
+        i = 0
 
         for successor, succ_move in successors:
             # Calcula o custo heurístico para o sucessor
-            print(successor)
+            #print(successor)
+        
             heuristic = final_heuristic_1(successor,1, player)
-            print(heuristic)
+            print(str(i) + " : " + str(heuristic))
+            i += 1
             # Adiciona o sucessor à lista aberta
             open_list.append((heuristic, successor, succ_move))
 
         # Ordena a lista pelo custo heurístico para garantir que o próximo estado a ser explorado é o de menor custo
-        open_list.sort(key=lambda x: x[0])
+        open_list.sort(key=lambda x: x[0], reverse = True)
         a,b,c = open_list.pop(0)
 
         return c
@@ -275,7 +279,8 @@ while not board.game_over:
                 col2 = astar_algorithm(board,2)
                 print(col2)
                 if board.drop_pieces(2, col2):
-                    print(final_heuristic_1(board.board,1,2))
+                    heuristic_value = final_heuristic_1(board.board, 1, 2)
+                    print("heuristica final:", heuristic_value)
                     board.print_board()
                     if board.win(2):
                         print("Player 2 wins!")
