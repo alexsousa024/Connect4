@@ -4,11 +4,10 @@ ROW_COUNT = 6
 COL_COUNT = 7 
 
 class Connect4Game: 
-    def __init__(self,player_1,player_2,board depth): 
+    def __init__(self,player_1,player_2,board): 
         self.board = board
         self.player_1 = player_1
         self.player_2 = player_2 
-        self.depth = depth
 
 #POR A CONDICAO DE WINNING_MOVE 
 #E POR NA HEURISTICA 
@@ -115,11 +114,45 @@ class Connect4Game:
 
         
         return total_score
-
-    def heuristic_function(self, state):
-        return self.final_heuristic_1(self.player_1, self.player_2)
     
-    def cost_function(self, state):
-        return state.depth
+    def astar_algorithm(self):
+        start_state = self.board
+        start_move = None
+        # Lista inicialmente contendo o estado inicial e o custo total como 0
+        open_list = [(0, start_state)]
+        visited_states = set()
+
+        best_move = None
+
+        while open_list:
+            # Sempre pega o primeiro item da lista, que deve ser o de menor custo
+            total_cost, current_state = open_list.pop(0)
+
+            # Verifica se o estado já foi visitado
+            if current_state in visited_states:
+                continue
+
+            # Marca o estado atual como visitado
+            visited_states.add(current_state)
+
+            # Gera os sucessores do estado atual
+            successors = self.board.generate_successors(current_state)
+
+            for successor_state, move in successors:
+                # Calcula o custo heurístico para o sucessor
+                heuristic = self.heuristic_function(successor_state)
+                total_cost = heuristic + current_cost
+
+                # Atualiza a melhor jogada, se aplicável
+                if not best_move or total_cost < best_move[0]:
+                    best_move = (total_cost, move)
+
+                # Adiciona o sucessor à lista aberta e mantém a lista ordenada
+                open_list.append((total_cost, successor_state, move))
+                open_list.sort(key=lambda x: x[0])  # Ordena a lista pelo total_cost
+
+        # Retorna a primeira jogada do melhor caminho encontrado
+        return best_move[1] if best_move else None
+
 
 
