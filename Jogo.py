@@ -2,8 +2,7 @@ import numpy as np
 import pygame
 import sys
 from algoritmos import Connect4Game 
-import heapq
-import copy
+import copy 
 
 # Initialize Pygame
 pygame.init()
@@ -32,7 +31,7 @@ class Board:
         self.board = np.zeros((ROW_COUNT, COL_COUNT))
         self.column_heights = np.full(COL_COUNT, ROW_COUNT - 1, dtype=int)
         self.game_over = False
-        self.turn = 1  # Player 1 starts
+        self.turn = 0  # Player 1 starts
 
     def drop_pieces(self, player , col):
         if self.valid_col(col):
@@ -103,53 +102,17 @@ def draw_board(board):
 
 board = Board()
 
-IA = Connect4Game(1,2,board.board, 0)
+IA = Connect4Game(1,2,board.board)
 
-#Algoritmo A*
-def astar_algorithm(self):
-        start_state = self.board
-
-        priority_queue = [(0,start_state)]
-        visited_states = set()
-
-        while priority_queue:
-            current_cost, current_state = heapq.heappop(priority_queue)
-            
-
-            if board.is_full or board.game_over:
-                return 
-            
-            if current_state in visited_states:
-                continue
-
-            visited_states.add(current_state)
-
-            sucessors = self.generate_sucessors(current_state)
-
-            for successor_state in sucessors:
-                heuristic = self.heuristic_function(successor_state)
-                cost_to_sucessor = self.cost_function(successor_state)
-                total_cost = heuristic + cost_to_sucessor + current_cost
-
-                heapq.heappush(priority_queue, (total_cost, successor_state))
-
+#Algoritmo A* 
 def generate_sucessors(self):
     sucessors = []
     for col in range(COL_COUNT):
         if self.board.valid_col(col):
             new_board = copy.deepcopy(self.board)
             new_board.drop_pieces(self.turn, col)
-
-            new_game = Connect4Game(self.player_1, self.player_2, new_board, self.depth +1)
-            new_game.switch_players()
-            sucessors.append(new_game)
+            sucessors.append(new_board)
     return sucessors
-
-
-def switch_players(self):
-    self.turn = 3 - self.turn
-
-
 
 #Funcao da heuristica #1 
 
@@ -163,30 +126,34 @@ while not board.game_over:
         if event.type == pygame.MOUSEBUTTONDOWN:
             x_pos = event.pos[0]
             col = int(x_pos // SQUARESIZE)
+            col2 = IA.astar_algorithm()
 
-
-            if board.turn == 1:
+            if board.turn == 0:
                 if board.drop_pieces(1, col):
                     print(IA.final_heuristic_1(1,2))
                     board.print_board() 
                     if board.win(1):
                         print("Player 1 wins!")
                         board.game_over = True
-                    board.turn = 3 - board.turn  # Switch turns
+                    board.turn = 1 - board.turn  # Switch turns
             else:
-                if board.drop_pieces(2, col):
+                if board.drop_pieces(2, col2):
                     print(IA.final_heuristic_1(1,2))
                     board.print_board()
                     if board.win(2):
                         print("Player 2 wins!")
                         board.game_over = True
-                    board.turn = 3 - board.turn  # Switch turns
+                    board.turn = 1 - board.turn  # Switch turns
 
     draw_board(board)  # Draw the board state at every loop iteration
     
     if board.is_full():
         print("The game is a draw!")
         board.game_over = True
+
+
+pygame.time.wait(3000)  # Delay to see the final board state before closing
+pygame.quit()
 
 
 pygame.time.wait(3000)  # Delay to see the final board state before closing
