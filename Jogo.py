@@ -256,45 +256,119 @@ def generate_sucessors(board,player):
                 sucessors.append((new_board.board,col))
         return sucessors
 
+        
+def draw_menu(screen):
+    screen.fill((200, 200, 200))  # Define a cor de fundo da tela
+
+    # Configura a fonte do título para uma fonte diferente e desenha o título
+    title_font = pygame.font.SysFont("comicsansms", 60)  # Altera para "comicsansms" e aumenta o tamanho
+    title_text = title_font.render("Connect 4", True, (0, 0, 0))  # Cor do texto do título (preto)
+    title_rect = title_text.get_rect(center=(width // 2, 50))
+    screen.blit(title_text, title_rect)
+
+    # Configurações para os modos de jogo
+    font = pygame.font.SysFont("Arial", 36)  # Fonte para os modos de jogo
+    menu_bg_color = (70, 70, 70)  # Altera para cinza escuro
+    text_color = (255, 255, 255)  # Cor do texto (branco)
+    modes = ["Player vs Player", "Player vs CPU", "CPU vs CPU"]
+    mode_rects = []
+
+    for i, mode in enumerate(modes):
+        # Calcula a posição e tamanho do retângulo para cada modo
+        rect_x = (width - (width // 2)) // 2  # Centraliza o retângulo
+        rect_y = 150 + i * 100 - 10
+        rect_width = width // 2
+        rect_height = 60
+
+        # Desenha o retângulo de fundo para cada modo de jogo
+        mode_rect = pygame.Rect(rect_x, rect_y, rect_width, rect_height)
+        pygame.draw.rect(screen, menu_bg_color, mode_rect)
+        mode_rects.append(mode_rect)
+
+        # Renderiza e desenha o texto do modo de jogo sobre o retângulo
+        text = font.render(mode, True, text_color)
+        text_rect = text.get_rect(center=(width // 2, 150 + i * 100))
+        screen.blit(text, text_rect)
+
+    pygame.display.update()
+    return mode_rects
+
+
+def menu_screen():
+        running = True
+        mode_rects = draw_menu(screen)
+
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    for i, rect in enumerate(mode_rects):
+                        if rect.collidepoint(x, y):
+                            return i  # Retorna o índice do modo selecionado
+
+            pygame.display.update()
+
+# No início do seu script, após inicializar o Pygame
+mode_index = menu_screen()
+
+# mode_index agora é 0 para PvP, 1 para PvCPU, ou 2 para CPUvCPU
+
 # Main game loop
 while not board.game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            pygame.quit()
             sys.exit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            x_pos = event.pos[0]
-            col = int(x_pos // SQUARESIZE)
-            
-
-            if board.turn == 0:
-                if board.drop_pieces(1, col):
-                    print(final_heuristic_1(board.board,1,2))
-                    board.print_board() 
-                    if board.win(1):
-                        print("Player 1 wins!")
+        if mode_index == 0:  # Player vs Player
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x_pos = event.pos[0]
+                col = int(x_pos // SQUARESIZE)
+                if board.drop_pieces(board.turn + 1, col):
+                    if board.win(board.turn + 1):
+                        print(f"Player {board.turn + 1} wins!")
                         board.game_over = True
-                    board.turn = 1 - board.turn  # Switch turns
-            else:
-                col2 = astar_algorithm(board,2)
-                print(col2)
+                    board.turn = 1 - board.turn  # Troca de turnos
+
+        elif mode_index == 1:  # Player vs CPU
+            if board.turn == 0:  # Turno do jogador humano
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x_pos = event.pos[0]
+                    col = int(x_pos // SQUARESIZE)
+                    if board.drop_pieces(1, col):
+                        if board.win(1):
+                            print("Player 1 wins!")
+                            board.game_over = True
+                        board.turn = 1 - board.turn  # Troca para o turno da CPU
+            else:  # Turno da CPU
+                col2 = astar_algorithm(board, 2)
                 if board.drop_pieces(2, col2):
-                    heuristic_value = final_heuristic_1(board.board, 1, 2)
-                    print("heuristica final:", heuristic_value)
-                    board.print_board()
                     if board.win(2):
-                        print("Player 2 wins!")
+                        print("CPU wins!")
                         board.game_over = True
-                    board.turn = 1 - board.turn  # Switch turns
+                    board.turn = 1 - board.turn  # Troca para o turno do jogador
 
-    draw_board(board)  # Draw the board state at every loop iteration
-    
-    if board.is_full():
-        print("The game is a draw!")
-        board.game_over = True
+        elif mode_index == 2:  # CPU vs CPU
+            pygame.time.wait(500)  # Adiciona um pequeno delay para tornar as jogadas visíveis
+            col = astar_algorithm(board, board.turn + 1)
+            if board.drop_pieces(board.turn + 1, col):
+                if board.win(board.turn + 1):
+                    print(f"CPU {board.turn + 1} wins!")
+                    board.game_over = True
+                board.turn = 1 - board.turn  # Troca de turnos entre as CPUs
 
+        draw_board(board)
 
-pygame.time.wait(3000)  # Delay to see the final board state before closing
+        if board.is_full():
+            print("The game is a draw!")
+            board.game_over = True
+
+        pygame.display.update()
+
+pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
 pygame.quit()
 
 
