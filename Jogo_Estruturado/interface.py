@@ -1,6 +1,7 @@
 import pygame
 import sys
-from Jogo_Estruturado.Jogo1 import *
+import math
+from Jogo1 import *
 # Initialize Pygame
 pygame.init()
 
@@ -31,6 +32,9 @@ def draw_board(board):
             elif board.board[r][c] == 2:
                 pygame.draw.circle(screen, YELLOW, (int(c * SQUARESIZE + SQUARESIZE / 2), int((r+1)* SQUARESIZE + SQUARESIZE / 2))  , RADIUS)
     pygame.display.update()
+
+C = math.sqrt(2)
+
 
 
 class Menu: 
@@ -88,15 +92,57 @@ class Menu:
 
                 pygame.display.update()
 
+
+    def draw_algorithm_menu(self, screen):
+        screen.fill((200, 200, 200))  # Fundo
+
+        # Título do submenu
+        title_font = pygame.font.SysFont("comicsansms", 40)
+        title_text = title_font.render("Escolha o Algoritmo", True, (0, 0, 0))
+        title_rect = title_text.get_rect(center=(width // 2, 50))
+        screen.blit(title_text, title_rect)
+
+        # Opções de algoritmo
+        algorithms = ["A*", "Monte Carlo"]
+        algorithm_rects = []
+
+        for i, algorithm in enumerate(algorithms):
+            rect_x = (width - (width // 3)) // 2
+            rect_y = 150 + i * 100
+            rect_width = width // 3
+            rect_height = 50
+
+            # Desenha retângulo para cada algoritmo
+            algorithm_rect = pygame.Rect(rect_x, rect_y, rect_width, rect_height)
+            pygame.draw.rect(screen, (70, 70, 70), algorithm_rect)
+            algorithm_rects.append(algorithm_rect)
+
+            # Texto para cada algoritmo
+            font = pygame.font.SysFont("Arial", 28)
+            text = font.render(algorithm, True, (255, 255, 255))
+            text_rect = text.get_rect(center=(width // 2, 150 + i * 100))
+            screen.blit(text, text_rect)
+
+        pygame.display.update()
+        return algorithm_rects
+
+    
+    
+
 board = Board()
+
+
 
 # No início do seu script, após inicializar o Pygame
 Inicio = Menu()
 mode_index = Inicio.menu_screen()
 a_star = Heuristica_AStar()
 
+if mode_index == 1 or mode_index == 2:
+    algorithm_index = Inicio.draw_algorithm_menu(screen)  #
 
 # Main game loop
+    
 while not board.game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -124,7 +170,8 @@ while not board.game_over:
                             board.game_over = True
                         board.turn = 1 - board.turn  # Troca para o turno da CPU
             else:  # Turno da CPU
-                col2 = a_star.astar_algorithm(board, 2)
+                if algorithm_index == 0:
+                    col2 = a_star.astar_algorithm(board, 2)
                 if board.drop_pieces(2, col2):
                     if board.win(2):
                         print("CPU wins!")
@@ -133,8 +180,8 @@ while not board.game_over:
 
         elif mode_index == 2:  # CPU vs CPU
             pygame.time.wait(500)  # Adiciona um pequeno delay para tornar as jogadas visíveis
-
-            col = a_star.astar_algorithm(board, board.turn + 1)
+            if(algorithm_index == 0):
+                col = a_star.astar_algorithm(board, board.turn + 1)
 
             if board.drop_pieces(board.turn + 1, col):
 
@@ -151,6 +198,13 @@ while not board.game_over:
             board.game_over = True
 
         pygame.display.update()
+
+        
+
+pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
+
+
+pygame.quit()
 
         
 
