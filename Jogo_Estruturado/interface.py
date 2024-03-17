@@ -196,7 +196,7 @@ while not board.game_over:
                     col2 = a_star.astar_algorithm(board, 2)
                 elif algorithm_index == 1: 
                     current_state = Node(board,2)
-                    col2 = Mcts.mcts(current_state, simulations = 100)
+                    col2 = Mcts.mcts(current_state, 2,simulations = 10000)
                 if board.drop_pieces(2, col2):
                     if board.win(2):
                         print("CPU wins!")
@@ -230,7 +230,6 @@ pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
 
 
 pygame.quit()
-        
 
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
 
