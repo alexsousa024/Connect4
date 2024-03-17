@@ -76,8 +76,27 @@ class Menu:
 
 
     def menu_screen(self):
+
+        running = True
+        mode_rects = self.draw_menu(screen)
+
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    for i, rect in enumerate(mode_rects):
+                        if rect.collidepoint(x, y):
+                            return i  # Retorna o índice do modo selecionado
+
+
+            pygame.display.update()
+
+    def algorithm_screen(self):
             running = True
-            mode_rects = self.draw_menu(screen)
+            mode_rects = self.draw_algorithm_menu(screen)
 
             while running:
                 for event in pygame.event.get():
@@ -91,8 +110,6 @@ class Menu:
                                 return i  # Retorna o índice do modo selecionado
 
                 pygame.display.update()
-
-
     def draw_algorithm_menu(self, screen):
         screen.fill((200, 200, 200))  # Fundo
 
@@ -124,6 +141,7 @@ class Menu:
             screen.blit(text, text_rect)
 
         pygame.display.update()
+
         return algorithm_rects
 
     
@@ -135,11 +153,15 @@ board = Board()
 
 # No início do seu script, após inicializar o Pygame
 Inicio = Menu()
+
 mode_index = Inicio.menu_screen()
+
 a_star = Heuristica_AStar()
 
+Mcts = monte_carlo_tree_search(); 
+
 if mode_index == 1 or mode_index == 2:
-    algorithm_index = Inicio.draw_algorithm_menu(screen)  #
+    algorithm_index = Inicio.algorithm_screen() 
 
 # Main game loop
     
@@ -172,6 +194,9 @@ while not board.game_over:
             else:  # Turno da CPU
                 if algorithm_index == 0:
                     col2 = a_star.astar_algorithm(board, 2)
+                elif algorithm_index == 1: 
+                    current_state = Node(board,2)
+                    col2 = Mcts.mcts(current_state, simulations = 100)
                 if board.drop_pieces(2, col2):
                     if board.win(2):
                         print("CPU wins!")
@@ -205,7 +230,6 @@ pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
 
 
 pygame.quit()
-
         
 
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
