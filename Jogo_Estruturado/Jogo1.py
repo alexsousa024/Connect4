@@ -220,8 +220,9 @@ class Heuristica_AStar:
     
 C = math.sqrt(2)
 class Node:
-    def __init__(self, game, player, move = None, parent=None):
-        self.game = game
+    def __init__(self, board, player, move = None, parent=None):
+        assert isinstance(board, Board)
+        self.board = board  #Instancia da classe board 
         self.parent = parent
         self.children = []
         self.move = move
@@ -230,36 +231,37 @@ class Node:
         self.player = player
 
     def is_leaf(self):
-        if self.game.is_full() or self.game.win(self.player):
+        if self.board.is_full():
             return True
         else:
-            return len(self.children) == 0
+            return False
         
-    def generate_successors(self, board, player):
+    def generate_successors(self):
         successors = []
         for col in range(COL_COUNT):
-            if board.valid_col(col):
-                new_board = copy.deepcopy(board)
-                new_board.drop_pieces(player, col)
-                successors.append(Node(new_board, self))
+            if self.board.valid_col(col):
+                new_board = copy.deepcopy(self.board)
+                new_board.drop_pieces(self.player, col)
+                successors.append(Node(new_board, self.player,self))
         return successors
     
     def is_fully_expanded(self):
-        possible_moves = self.generate_successors(self.game, self.player)
+        possible_moves = self.generate_successors()
+
+        print(len(self.children))
+
+        print(len(possible_moves))
+
         return len(self.children) == len(possible_moves)
     
     def expand(self):
-        
-        for col in range(COL_COUNT):
-            if self.game.valid_col(col):
-                new_board = copy.deepcopy(self.game)
-                new_board.drop_pieces(self.player, col)
-                new_child = Node(new_board, 3 - self.player, move=col, parent=self)  # Switch player for the next move
-                self.children.append(new_child)
+        possible_moves = self.generate_successors()
+        for move in possible_moves: 
+            self.children.append(move)
     
 
     def select_child(self):
-        total_visits = math.log(self.visits)
+        
         best_score = -float("inf")
         best_children = []
         unvisited_children = []
@@ -268,7 +270,7 @@ class Node:
             if child.visits == 0:
                 unvisited_children.append(child)
             else:
-                exploration_term = math.sqrt(math.log(total_visits +1) / child.visits)
+                exploration_term = math.sqrt(math.log(self.visits +1) / child.visits)
                 score = child.wins / child.visits + C * exploration_term
                 if  score == best_score:
                     best_score = score
@@ -288,47 +290,50 @@ class Node:
 
 class monte_carlo_tree_search:
 
-    def mcts(self, root, player, simulations=10000):
+    def mcts(self, board, player, simulations=100):
+        root = Node(board,player)
         for _ in range(simulations):
             node = root
             # Selection
+            
             while not node.is_leaf():
                 if node.is_fully_expanded():
+                    print("Nódulo Expandido")
                     node = node.select_child()
                 else:
                     # Expansion
+                    print("Expandiu")
                     node.expand()
                     node = node.children[-1]  # Choose the newest child
                     break
+
             # Simulation
-            result = self.simulate_random_playout(node.game, player)
+                
+            result = self.simulate_random_playout(node.board, player)
+
+
             # Backpropagation
+
             node.backpropagate(result)
 
         # After completing the simulations, choose the best move from the root node
-        if root.children:
-            best_child = max(root.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
+        print(node.children)
+        if node.children:
+            best_child = max(node.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
+            print(best_child.board)
             return best_child.move  # Return the move associated with the best child
-        else:
-            # Fallback if no children were expanded (should not happen if the game state allows moves)
-            return random.choice([col for col in range(COL_COUNT) if root.game.valid_col(col)])
-    
-    def simulate_random_playout(self,game_state,player):
-        """
-        Simulates a random playout from the given game state to the end of the game.
         
-        :param game_state: The state of the game to simulate from.
-        :return: The result of the simulation (1 for win, 0 for loss, 0.5 for draw).
-        """
+    
+    def simulate_random_playout(self, game_state, player):
         simulated_game = copy.deepcopy(game_state)
-
-        current_player = player  # Assuming player 2 is the AI
+        current_player = player
 
         while not simulated_game.is_full() and not simulated_game.win(current_player):
             possible_moves = [col for col in range(COL_COUNT) if simulated_game.valid_col(col)]
             move = random.choice(possible_moves)
             simulated_game.drop_pieces(current_player, move)
             current_player = 1 if current_player == 2 else 2  # Switch player
+            print(simulated_game.board)
         
         if simulated_game.win(current_player):
             return 1 if current_player == 2 else 0
