@@ -1,232 +1,327 @@
-import pygame
-import sys
-import math
-from Jogo1 import *
-# Initialize Pygame
-pygame.init()
+import numpy as np
+import copy
+import math 
+import random
 
-# Define colors
-BLUE = (0, 0, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
+# Game settings
+ROW_COUNT = 6
+COL_COUNT = 7
+SQUARESIZE = 100
 
-width = COL_COUNT * SQUARESIZE
-height = (ROW_COUNT + 1) * SQUARESIZE
-size = (width, height)
 
-RADIUS = int(SQUARESIZE / 2 - 5)
+class Board:
+    def __init__(self):
+        self.board = np.zeros((ROW_COUNT, COL_COUNT))
+        self.column_heights = np.full(COL_COUNT, ROW_COUNT - 1, dtype=int)
+        self.game_over = False
+        self.turn = 0  # Player 1 starts
 
-screen = pygame.display.set_mode(size)
-
-def draw_board(board):
-    for c in range(COL_COUNT):
-        for r in range(ROW_COUNT):
-            pygame.draw.rect(screen, BLUE, (c * SQUARESIZE, (r+1) * SQUARESIZE, SQUARESIZE, SQUARESIZE))
-            pygame.draw.circle(screen, BLACK, (int(c * SQUARESIZE + SQUARESIZE / 2), int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
+    def drop_pieces(self, player , col):
+        if self.valid_col(col):
+            height = self.column_heights[col]
+            self.board[height][col] = player
+            self.column_heights[col] = height-1
+            return True
+        else:
+            print("Invalid move")
+            return False
+        
+    def valid_col(self, col):
+        if self.column_heights[col] == -1 :
+            return False
+        return True
     
-    for c in range(COL_COUNT):
-        for r in range(ROW_COUNT):
-            if board.board[r][c] == 1:
-                pygame.draw.circle(screen, RED, (int(c * SQUARESIZE + SQUARESIZE / 2),  int((r+1) * SQUARESIZE + SQUARESIZE / 2)) , RADIUS)
-            elif board.board[r][c] == 2:
-                pygame.draw.circle(screen, YELLOW, (int(c * SQUARESIZE + SQUARESIZE / 2), int((r+1)* SQUARESIZE + SQUARESIZE / 2))  , RADIUS)
-    pygame.display.update()
+    def win(self,player): 
+        #Verificar horizontal
+        for c in range(COL_COUNT-3):
+            for r in range(ROW_COUNT):
+                if self.board[r][c] == player and self.board[r][c+1] == player and self.board[r][c+2] == player and self.board[r][c+3] == player:
+                    return True
+        #Verificar vertical
+                
+        for c in range(COL_COUNT):
+            for r in range(ROW_COUNT - 3):
+                if self.board[r][c] == player and self.board[r+1][c] == player and self.board[r+2][c] == player and self.board[r+3][c] == player: 
+                    return True
+                
+        #Verificar diagonal com declive positivo
+        
+        for c in range(COL_COUNT - 3):
+            for r in range(3,ROW_COUNT):
+                if self.board[r][c] == player and self.board[r-1][c+1] == player and self.board[r-2][c+2] == player and self.board[r-3][c+3] == player: 
+                    return True 
+        #Verificar diagonal com decline negativo 
+        for c in range(COL_COUNT - 3):
+            for r in range(3):
+                if self.board[r][c] == player and self.board[r+1][c+1] == player and self.board[r+2][c+2] == player and self.board[r+3][c+3] == player: 
+                    return True
+                
+        return False 
 
-C = math.sqrt(2)
+    def is_full(self):
+        return np.all(self.column_heights < 0)
 
+    def print_board(self):
 
+        print(self.board)
 
-class Menu: 
-    def draw_menu(self,screen):
-        screen.fill((200, 200, 200))  # Define a cor de fundo da tela
-
-        # Configura a fonte do título para uma fonte diferente e desenha o título
-        title_font = pygame.font.SysFont("comicsansms", 60)  # Altera para "comicsansms" e aumenta o tamanho
-        title_text = title_font.render("Connect 4", True, (0, 0, 0))  # Cor do texto do título (preto)
-        title_rect = title_text.get_rect(center=(width // 2, 50))
-        screen.blit(title_text, title_rect)
-
-        # Configurações para os modos de jogo
-        font = pygame.font.SysFont("Arial", 36)  # Fonte para os modos de jogo
-        menu_bg_color = (70, 70, 70)  # Altera para cinza escuro
-        text_color = (255, 255, 255)  # Cor do texto (branco)
-        modes = ["Player vs Player", "Player vs CPU", "CPU vs CPU"]
-        mode_rects = []
-
-        for i, mode in enumerate(modes):
-            # Calcula a posição e tamanho do retângulo para cada modo
-            rect_x = (width - (width // 2)) // 2  # Centraliza o retângulo
-            rect_y = 150 + i * 100 - 10
-            rect_width = width // 2
-            rect_height = 60
-
-            # Desenha o retângulo de fundo para cada modo de jogo
-            mode_rect = pygame.Rect(rect_x, rect_y, rect_width, rect_height)
-            pygame.draw.rect(screen, menu_bg_color, mode_rect)
-            mode_rects.append(mode_rect)
-
-            # Renderiza e desenha o texto do modo de jogo sobre o retângulo
-            text = font.render(mode, True, text_color)
-            text_rect = text.get_rect(center=(width // 2, 150 + i * 100))
-            screen.blit(text, text_rect)
-
-        pygame.display.update()
-        return mode_rects
-
-
-    def menu_screen(self):
-
-        running = True
-        mode_rects = self.draw_menu(screen)
-
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = event.pos
-                    for i, rect in enumerate(mode_rects):
-                        if rect.collidepoint(x, y):
-                            return i  # Retorna o índice do modo selecionado
-
-
-            pygame.display.update()
-
-    def algorithm_screen(self):
-            running = True
-            mode_rects = self.draw_algorithm_menu(screen)
-
-            while running:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-                        sys.exit()
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
-                        x, y = event.pos
-                        for i, rect in enumerate(mode_rects):
-                            if rect.collidepoint(x, y):
-                                return i  # Retorna o índice do modo selecionado
-
-                pygame.display.update()
-    def draw_algorithm_menu(self, screen):
-        screen.fill((200, 200, 200))  # Fundo
-
-        # Título do submenu
-        title_font = pygame.font.SysFont("comicsansms", 40)
-        title_text = title_font.render("Escolha o Algoritmo", True, (0, 0, 0))
-        title_rect = title_text.get_rect(center=(width // 2, 50))
-        screen.blit(title_text, title_rect)
-
-        # Opções de algoritmo
-        algorithms = ["A*", "Monte Carlo"]
-        algorithm_rects = []
-
-        for i, algorithm in enumerate(algorithms):
-            rect_x = (width - (width // 3)) // 2
-            rect_y = 150 + i * 100
-            rect_width = width // 3
-            rect_height = 50
-
-            # Desenha retângulo para cada algoritmo
-            algorithm_rect = pygame.Rect(rect_x, rect_y, rect_width, rect_height)
-            pygame.draw.rect(screen, (70, 70, 70), algorithm_rect)
-            algorithm_rects.append(algorithm_rect)
-
-            # Texto para cada algoritmo
-            font = pygame.font.SysFont("Arial", 28)
-            text = font.render(algorithm, True, (255, 255, 255))
-            text_rect = text.get_rect(center=(width // 2, 150 + i * 100))
-            screen.blit(text, text_rect)
-
-        pygame.display.update()
-
-        return algorithm_rects
-
+class Heuristica_AStar: 
     
-    
+    def Scores(self,window):
+            score = 0
+            # Contar vitórias absolutas
+        
+            #Mudar para float pq é como está o array numpy 
+            player_1 = 1.0
+            player_2 = 2.0
+            if np.count_nonzero(window == player_2) == 4:
+                score += 5120  # Vitória absoluta para o player_2 
+                
+            elif np.count_nonzero(window == player_1) == 4:
+                
+                score -= 5120  # Vitória absoluta para o player_1
 
-board = Board()
+            # Adaptação dos demais cálculos usando np.count_nonzero
+            if np.count_nonzero(window == player_1) == 3 and np.count_nonzero(window == player_2) == 0: 
+                score -= 500
+            elif np.count_nonzero(window == player_1) == 2 and np.count_nonzero(window == player_2) == 0: 
+                score -= 100
+            elif np.count_nonzero(window == player_1) == 1 and np.count_nonzero(window == player_2) == 0: 
+                score -= 10
+            # Não é necessário tratar o caso de ambos 0, pois o score não muda
+            elif np.count_nonzero(window == player_1) == 0 and np.count_nonzero(window == player_2) == 1: 
+                score += 10
+            elif np.count_nonzero(window == player_1) == 0 and np.count_nonzero(window == player_2) == 2: 
+                score += 100
+            elif np.count_nonzero(window == player_1) == 0 and np.count_nonzero(window == player_2) == 3: 
+                score += 500
+
+            return score
 
 
-
-# No início do seu script, após inicializar o Pygame
-Inicio = Menu()
-
-mode_index = Inicio.menu_screen()
-
-a_star = Heuristica_AStar()
-
-Mcts = monte_carlo_tree_search(); 
-
-if mode_index == 1 or mode_index == 2:
-    algorithm_index = Inicio.algorithm_screen() 
-
-# Main game loop
-    
-while not board.game_over:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-        if mode_index == 0:  # Player vs Player
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x_pos = event.pos[0]
-                col = int(x_pos // SQUARESIZE)
-                if board.drop_pieces(board.turn + 1, col):
-                    if board.win(board.turn + 1):
-                        print(f"Player {board.turn + 1} wins!")
-                        board.game_over = True
-                    board.turn = 1 - board.turn  # Troca de turnos
-
-        elif mode_index == 1:  # Player vs CPU
-            if board.turn == 0:  # Turno do jogador humano
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    x_pos = event.pos[0]
-                    col = int(x_pos // SQUARESIZE)
-                    if board.drop_pieces(1, col):
-                        if board.win(1):
-                            print("Player 1 wins!")
-                            board.game_over = True
-                        board.turn = 1 - board.turn  # Troca para o turno da CPU
-            else:  # Turno da CPU
-                if algorithm_index == 0:
-                    col2 = a_star.astar_algorithm(board, 2)
-                elif algorithm_index == 1: 
-                    current_state = Node(board,2)
-                    col2 = Mcts.mcts(current_state, simulations = 100)
-                if board.drop_pieces(2, col2):
-                    if board.win(2):
-                        print("CPU wins!")
-                        board.game_over = True
-                    board.turn = 1 - board.turn  # Troca para o turno do jogador
-
-        elif mode_index == 2:  # CPU vs CPU
-            pygame.time.wait(500)  # Adiciona um pequeno delay para tornar as jogadas visíveis
-            if(algorithm_index == 0):
-                col = a_star.astar_algorithm(board, board.turn + 1)
-
-            if board.drop_pieces(board.turn + 1, col):
-
-                if board.win(board.turn + 1):
-
-                    print(f"CPU {board.turn + 1} wins!")
-                    board.game_over = True
-                board.turn = 1 - board.turn  # Troca de turnos entre as CPUs
-
-        draw_board(board)
-
-        if board.is_full():
-            print("The game is a draw!")
-            board.game_over = True
-
-        pygame.display.update()
+    def board_evaluation(self,board,player_1,player_2):
+            board_score_matrix = np.array([
+                [3, 4, 5, 7, 5, 4, 3],
+                [4, 6, 8, 10, 8, 6, 4],
+                [5, 8, 11, 13, 11, 8, 5],
+                [5, 8, 11, 13, 11, 8, 5],
+                [4, 6, 8, 10, 8, 6, 4],
+                [3, 4, 5, 7, 5, 4, 3]
+            ])
+            
+            player_score = 0 
+            
+            # Iterar sobre o tabuleiro e calcular o score baseado em posições ocupadas
+            for r in range(ROW_COUNT):
+                for c in range(COL_COUNT):
+                    if board[r][c] == player_1:  # Posição ocupada pelo jogador 1
+                        player_score -= 5* board_score_matrix[r][c]
+                    elif board[r][c] == player_2:  # Posição ocupada pelo jogador 2
+                        player_score += 5 * board_score_matrix[r][c]
+            
+            return player_score
 
         
+                
+        #Funcao  de heurística #1 - Jananlas de 4 em 4 
+    def evaluate_function_1(self,board):
+            score = 0
+            
+            #horizontalmente
+            for r in range(ROW_COUNT):
+                for c in range(COL_COUNT - 3): 
+                    window = board[r][c:c+4]
+                    
+                    score += self.Scores(window)
+            
+        
+            #verticalmente
+            for r in range(ROW_COUNT-3):
+                for c in range(COL_COUNT): 
+                    window = np.array([board[r+i][c] for i in range(4)])
+                    
+                    score += self.Scores(window)
 
-pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
+            #diagonalente com declive negativo 
+            for r in range(ROW_COUNT-3):
+                for c in range(COL_COUNT-3):
+                    window = np.array([board[r+i][c+i] for i in range(4)])
+                    score += self.Scores(window)
+
+        # diagonalmente com declive positivo 
+            for r in range(ROW_COUNT-3):
+                for c in range(COL_COUNT-1, 2, -1):
+                    window = np.array([board[r+i][c-i] for i in range(4)])
+                    score += self.Scores(window)
+
+            return score
+        
+    def final_heuristic_1(self,board,player_1, player_2):
+
+            eval_score = self.evaluate_function_1(board)
+            board_score = self.board_evaluation(board,player_1,player_2)
+            total_score = eval_score + board_score                           
+            return total_score
+    
 
 
-pygame.quit()
+    def astar_algorithm(self,board, player): 
+        open_list = [(0, board, None)]  # Custo inicial, estado inicial, e nenhuma jogada ainda
+        best_score = float('-inf')  # Inicializa a melhor pontuação como infinito negativo
+        best_move = None  # Melhor movimento ainda não foi encontrado
+
+        while open_list:
+            _, current_board, move = open_list.pop(0)  # Remove o item com menor custo heurístico
+            # Verifica se o movimento atual é melhor do que o melhor encontrado até agora
+        
+            current_score = self.final_heuristic_1(current_board.board,1,2)
+            
+            #print(current_score)
+            if current_score > best_score:
+                best_score = current_score
+                best_move = move
+
+            # Se o tabuleiro atual representa um estado de vitória, não precisamos continuar
+
+
+            # Gera os sucessores do estado atual
+            successors = self.generate_sucessors(current_board, player)
+            #print(successors)
+
+            i = 0
+
+            for successor, succ_move in successors:
+                # Calcula o custo heurístico para o sucessor
+                #print(successor)
+            
+                heuristic = self.final_heuristic_1(successor,1, player)
+                print(str(i) + " : " + str(heuristic))
+                i += 1
+                # Adiciona o sucessor à lista aberta
+                open_list.append((heuristic, successor, succ_move))
+
+            # Ordena a lista pelo custo heurístico para garantir que o próximo estado a ser explorado é o de menor custo
+            open_list.sort(key=lambda x: x[0], reverse = True)
+            a,b,c = open_list.pop(0)
+
+            return c
+        # Retorna a coluna do melhor movimento encontrado
+        return best_move
+
+
+    def generate_sucessors(self,board,player):
+            sucessors = []
+            for col in range(COL_COUNT):
+                if board.valid_col(col):
+                    new_board = copy.deepcopy(board)
+                    new_board.drop_pieces(player, col)
+                    sucessors.append((new_board.board,col))
+            return sucessors
+    
+C = math.sqrt(2)
+class Node:
+    def __init__(self, game, player, parent=None):
+        self.game = game
+        self.parent = parent
+        self.children = []
+        self.wins = 0
+        self.visits = 0
+        self.player = player
+
+    def is_leaf(self):
+        if self.game.is_full() or self.game.win(self.player):
+            return True
+        else:
+            return len(self.children) == 0
+        
+    def generate_successors(self, board, player):
+        successors = []
+        for col in range(COL_COUNT):
+            if board.valid_col(col):
+                new_board = copy.deepcopy(board)
+                new_board.drop_pieces(player, col)
+                successors.append(Node(new_board, self))
+        return successors
+    
+    def is_fully_expanded(self):
+        possible_moves = self.generate_successors(self.game, self.player)
+        return len(self.children) == len(possible_moves)
+    
+    def expand(self):
+        possible_moves, _ = self.generate_successors(self.game, self.player)
+        for move in possible_moves:
+            self.children.append(Node(move,self))
+    
+
+    def select_child(self):
+        total_visits = math.log(self.visits)
+        best_score = -float("inf")
+        best_children = []
+        unvisited_children = []
+
+        for child in self.children:
+            if child.visits == 0:
+                unvisited_children.append(child)
+            else:
+                exploration_term = math.sqrt(math.log(total_visits +1) / child.visits)
+                score = child.wins / child.visits + C * exploration_term
+                if  score == best_score:
+                    best_score = score
+                    best_children = [child]
+                elif score > best_score:
+                    best_score = score
+                    best_children = [child]
+            if len(unvisited_children) > 0:
+                return random.choice(unvisited_children)
+        return random.choice(best_children)
+    
+    def backpropagate(self, result):
+        self.visits += 1
+        self.wins += result
+        if self.parent is not None:
+            self.parent.backpropagate(result)
+
+class monte_carlo_tree_search:
+
+    def mcts(self,root,simulations = 100):
+        
+        for _ in range(simulations):
+            node = root
+            #Selection
+            while not node.is_leaf():
+
+                if node.is_fully_expanded():
+                    node = node.select_child()
+                else:
+                    #Expansion
+                    node.expand()
+                    node = node.children[-1] #Choose the newest child
+                    break
+            #Simulation
+            result = self.simulate_random_playout(node.game)
+
+            #Backpropagation
+            node.backpropagate(result)
+        # After completing the simulations, choose the best move from the root node
+        best_move = max(root.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
+        return best_move.game.last_move  # Assuming your game state keeps track of the last move made
+    
+    def simulate_random_playout(self,game_state):
+        """
+        Simulates a random playout from the given game state to the end of the game.
+        
+        :param game_state: The state of the game to simulate from.
+        :return: The result of the simulation (1 for win, 0 for loss, 0.5 for draw).
+        """
+        simulated_game = copy.deepcopy(game_state)
+        current_player = 2  # Assuming player 2 is the AI
+        while not simulated_game.game.is_full() and not simulated_game.game.win():
+            possible_moves = [col for col in range(COL_COUNT) if simulated_game.valid_col(col)]
+            move = random.choice(possible_moves)
+            simulated_game.drop_pieces(current_player, move)
+            current_player = 1 if current_player == 2 else 2  # Switch player
+        
+        if simulated_game.game.win():
+            return 1 if current_player == 2 else 0
+        else:
+            return 0.5  # Consider draw as half a win
