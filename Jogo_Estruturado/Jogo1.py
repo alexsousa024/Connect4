@@ -220,10 +220,11 @@ class Heuristica_AStar:
     
 C = math.sqrt(2)
 class Node:
-    def __init__(self, game, player, parent=None):
+    def __init__(self, game, player, move = None, parent=None):
         self.game = game
         self.parent = parent
         self.children = []
+        self.move = move
         self.wins = 0
         self.visits = 0
         self.player = player
@@ -248,9 +249,13 @@ class Node:
         return len(self.children) == len(possible_moves)
     
     def expand(self):
-        possible_moves, _ = self.generate_successors(self.game, self.player)
-        for move in possible_moves:
-            self.children.append(Node(move,self))
+        
+        for col in range(COL_COUNT):
+            if self.game.valid_col(col):
+                new_board = copy.deepcopy(self.game)
+                new_board.drop_pieces(self.player, col)
+                new_child = Node(new_board, 3 - self.player, move=col, parent=self)  # Switch player for the next move
+                self.children.append(new_child)
     
 
     def select_child(self):
@@ -283,30 +288,32 @@ class Node:
 
 class monte_carlo_tree_search:
 
-    def mcts(self,root,simulations = 100):
-        
+    def mcts(self, root, player, simulations=10000):
         for _ in range(simulations):
             node = root
-            #Selection
+            # Selection
             while not node.is_leaf():
-
                 if node.is_fully_expanded():
                     node = node.select_child()
                 else:
-                    #Expansion
+                    # Expansion
                     node.expand()
-                    node = node.children[-1] #Choose the newest child
+                    node = node.children[-1]  # Choose the newest child
                     break
-            #Simulation
-            result = self.simulate_random_playout(node.game)
-
-            #Backpropagation
+            # Simulation
+            result = self.simulate_random_playout(node.game, player)
+            # Backpropagation
             node.backpropagate(result)
+
         # After completing the simulations, choose the best move from the root node
-        best_move = max(root.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
-        return best_move.game.last_move  # Assuming your game state keeps track of the last move made
+        if root.children:
+            best_child = max(root.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
+            return best_child.move  # Return the move associated with the best child
+        else:
+            # Fallback if no children were expanded (should not happen if the game state allows moves)
+            return random.choice([col for col in range(COL_COUNT) if root.game.valid_col(col)])
     
-    def simulate_random_playout(self,game_state):
+    def simulate_random_playout(self,game_state,player):
         """
         Simulates a random playout from the given game state to the end of the game.
         
@@ -314,14 +321,16 @@ class monte_carlo_tree_search:
         :return: The result of the simulation (1 for win, 0 for loss, 0.5 for draw).
         """
         simulated_game = copy.deepcopy(game_state)
-        current_player = 2  # Assuming player 2 is the AI
-        while not simulated_game.game.is_full() and not simulated_game.game.win():
+
+        current_player = player  # Assuming player 2 is the AI
+
+        while not simulated_game.is_full() and not simulated_game.win(current_player):
             possible_moves = [col for col in range(COL_COUNT) if simulated_game.valid_col(col)]
             move = random.choice(possible_moves)
             simulated_game.drop_pieces(current_player, move)
             current_player = 1 if current_player == 2 else 2  # Switch player
         
-        if simulated_game.game.win():
+        if simulated_game.win(current_player):
             return 1 if current_player == 2 else 0
         else:
             return 0.5  # Consider draw as half a win
