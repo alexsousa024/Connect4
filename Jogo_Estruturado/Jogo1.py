@@ -217,7 +217,51 @@ class Heuristica_AStar:
                     new_board.drop_pieces(player, col)
                     sucessors.append((new_board.board,col))
             return sucessors
-    
+
+    def minimax(self, board, depth, maximizing_player, player, alpha=float('-inf'), beta=float('inf')):
+        if depth == 0 or board.is_full() or board.win(player):
+            return self.final_heuristic_1(board.board, 1, 2), -1
+
+        if maximizing_player:
+            max_eval = float('-inf')
+            player_move = -1
+
+            for col in range(COL_COUNT):
+                if board.valid_col(col):
+                    new_board = copy.deepcopy(board)
+                    new_board.drop_pieces(player, col)
+                    eval, _ = self.minimax(new_board, depth - 1, False, player, alpha, beta)
+                    
+                    if max_eval < eval:
+                        player_move = col
+                        max_eval = eval
+                    alpha = max(max_eval, alpha)
+                    if alpha >= beta:
+                        break
+            return max_eval, player_move
+        else:
+            min_eval = float('inf')
+            player_move = -1 
+
+            for col in range(COL_COUNT):
+                if board.valid_col(col):
+                    new_board = copy.deepcopy(board)
+                    new_board.drop_pieces(3 - player, col)  # Other player's move
+                    eval, _ = self.minimax(new_board, depth - 1, True, player, alpha, beta)
+                    
+                    if min_eval > eval:
+                        player_move = col
+                        min_eval = eval
+                    
+                    beta = min(min_eval, beta)
+                    if alpha >= beta:
+                        break
+            return min_eval, player_move
+
+
+
+
+
 C = math.sqrt(2)
 class Node:
     def __init__(self, board, player, move = None , parent=None):
