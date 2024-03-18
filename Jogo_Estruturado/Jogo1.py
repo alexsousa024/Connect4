@@ -231,7 +231,7 @@ class Node:
         self.player = player
 
     def is_leaf(self):
-        if self.board.is_full():
+        if self.board.is_full() and self.board.win(self.player):
             return True
         else:
             return False
@@ -298,7 +298,6 @@ class monte_carlo_tree_search:
                     node = node.select_child()
                 else:
                     # Expansion
-                    print("Expandiu")
                     node.expand()
                     
                     
@@ -308,8 +307,7 @@ class monte_carlo_tree_search:
                 
             
             result = self.simulate_random_playout(node.board, player)
-
-
+            print(result)
             # Backpropagation
 
             node.backpropagate(result)
@@ -317,7 +315,17 @@ class monte_carlo_tree_search:
         # After completing the simulations, choose the best move from the root node
        
         if node.children:
+
+            print("Move, Wins, Visits, Win/Visit Ratio")
+            for child in root.children:
+                if child.visits > 0:
+                    ratio = child.wins / child.visits
+                else:
+                    ratio = 0
+                print(f"{child.move}, {child.wins}, {child.visits}, {ratio}")
+
             best_child = max(node.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
+            
             return best_child.move  # Return the move associated with the best child
         
     
