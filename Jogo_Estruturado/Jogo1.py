@@ -242,17 +242,13 @@ class Node:
             if self.board.valid_col(col):
                 new_board = copy.deepcopy(self.board)
                 new_board.drop_pieces(self.player, col)
-                successors.append(Node(new_board, self.player,self))
+                successors.append(Node(new_board, self.player,col,self))
         return successors
     
     def is_fully_expanded(self):
         possible_moves = self.generate_successors()
-
-        print(len(self.children))
-
-        print(len(possible_moves))
-
-        return len(self.children) == len(possible_moves)
+        
+        return len(possible_moves) == 0
     
     def expand(self):
         possible_moves = self.generate_successors()
@@ -290,7 +286,7 @@ class Node:
 
 class monte_carlo_tree_search:
 
-    def mcts(self, board, player, simulations=100):
+    def mcts(self, board, player, simulations=500):
         root = Node(board,player)
         for _ in range(simulations):
             node = root
@@ -298,17 +294,19 @@ class monte_carlo_tree_search:
             
             while not node.is_leaf():
                 if node.is_fully_expanded():
-                    print("Nódulo Expandido")
+                    
                     node = node.select_child()
                 else:
                     # Expansion
                     print("Expandiu")
                     node.expand()
-                    node = node.children[-1]  # Choose the newest child
+                    
+                    
                     break
 
             # Simulation
                 
+            
             result = self.simulate_random_playout(node.board, player)
 
 
@@ -317,10 +315,9 @@ class monte_carlo_tree_search:
             node.backpropagate(result)
 
         # After completing the simulations, choose the best move from the root node
-        print(node.children)
+       
         if node.children:
             best_child = max(node.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
-            print(best_child.board)
             return best_child.move  # Return the move associated with the best child
         
     
@@ -333,7 +330,6 @@ class monte_carlo_tree_search:
             move = random.choice(possible_moves)
             simulated_game.drop_pieces(current_player, move)
             current_player = 1 if current_player == 2 else 2  # Switch player
-            print(simulated_game.board)
         
         if simulated_game.win(current_player):
             return 1 if current_player == 2 else 0
