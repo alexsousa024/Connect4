@@ -220,7 +220,7 @@ class Heuristica_AStar:
     
 C = math.sqrt(2)
 class Node:
-    def __init__(self, board, player, move = None, parent=None):
+    def __init__(self, board, player, move = None , parent=None):
         assert isinstance(board, Board)
         self.board = board  #Instancia da classe board 
         self.parent = parent
@@ -231,7 +231,7 @@ class Node:
         self.player = player
 
     def is_leaf(self):
-        if self.board.is_full() and self.board.win(self.player):
+        if self.board.is_full() or self.board.win(self.player):
             return True
         else:
             return False
@@ -242,13 +242,13 @@ class Node:
             if self.board.valid_col(col):
                 new_board = copy.deepcopy(self.board)
                 new_board.drop_pieces(self.player, col)
-                successors.append(Node(new_board, self.player,col,self))
+                successors.append(Node(new_board, self.player, col, self))
         return successors
     
     def is_fully_expanded(self):
         possible_moves = self.generate_successors()
         
-        return len(possible_moves) == 0
+        return len(possible_moves) == len(self.children)
     
     def expand(self):
         possible_moves = self.generate_successors()
@@ -287,46 +287,55 @@ class Node:
 class monte_carlo_tree_search:
 
     def mcts(self, board, player, simulations=500):
-        root = Node(board,player)
+
+       # Passo 1: Inicialize a árvore
+        root = Node(board, player)
+        root.expand()  # Isso gera os primeiros sucessores (os 7 nós, assumindo um tabuleiro de Connect Four)
+        
+        # Passo 2: Simulações iniciais para os primeiros nós
+        initial_simulations_per_node = 5
+        for initial_node in root.children[:7]:  # Assumindo que você quer fazer isso apenas para os primeiros 7 nós
+            for _ in range(initial_simulations_per_node):
+                result = self.simulate_random_playout(initial_node.board, player)
+                initial_node.backpropagate(result)
+        
+    
+
+        
         for _ in range(simulations):
             node = root
             # Selection
             
             while not node.is_leaf():
                 if node.is_fully_expanded():
-                    
                     node = node.select_child()
                 else:
                     # Expansion
+
                     node.expand()
-                    
-                    
                     break
 
             # Simulation
-                
-            
             result = self.simulate_random_playout(node.board, player)
-            print(result)
-            # Backpropagation
+
 
             node.backpropagate(result)
 
-        # After completing the simulations, choose the best move from the root node
+        best_ratio = -float("inf")
+        best_move = None
+        for child in root.children:
+            if child.visits > 0:
+                ratio = child.wins / child.visits
+                print(ratio)
+            else:
+                ratio = 0
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_move = child.move
+        
+        # Retorna o movimento do melhor filho
+        return best_move
        
-        if node.children:
-
-            print("Move, Wins, Visits, Win/Visit Ratio")
-            for child in root.children:
-                if child.visits > 0:
-                    ratio = child.wins / child.visits
-                else:
-                    ratio = 0
-                print(f"{child.move}, {child.wins}, {child.visits}, {ratio}")
-
-            best_child = max(node.children, key=lambda child: child.wins / child.visits if child.visits > 0 else 0)
-            
-            return best_child.move  # Return the move associated with the best child
         
     
     def simulate_random_playout(self, game_state, player):
