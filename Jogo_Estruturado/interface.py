@@ -1,7 +1,7 @@
 import pygame
 import sys
 import math
-from Jogo1 import *
+from jogo import *
 # Initialize Pygame
 pygame.init()
 
@@ -120,7 +120,7 @@ class Menu:
         screen.blit(title_text, title_rect)
 
         # Opções de algoritmo
-        algorithms = ["A*", "Monte Carlo"]
+        algorithms = ["A*", "Monte Carlo", "Minimax"]
         algorithm_rects = []
 
         for i, algorithm in enumerate(algorithms):
@@ -160,8 +160,9 @@ a_star = Heuristica_AStar()
 
 Mcts = monte_carlo_tree_search(); 
 
-if mode_index == 1 or mode_index == 2:
+if mode_index == 1 or mode_index == 2 or mode_index == 3:
     algorithm_index = Inicio.algorithm_screen() 
+    print("ALGORITHM INDEX = " , algorithm_index)
 
 # Main game loop
     
@@ -196,7 +197,13 @@ while not board.game_over:
                     col2 = a_star.astar_algorithm(board, 2)
                 elif algorithm_index == 1: 
                     
-                    col2 = Mcts.mcts(board, 2,simulations = 10000)
+                    col2 = Mcts.mcts(board, 2,simulations = 8000)
+
+                elif algorithm_index == 2:
+                    print("ENTREI")
+
+                    col2 = a_star.minimax(board,  5, True , 2)[1]
+                    print(col2)
                     
                 if board.drop_pieces(2, col2):
                     if board.win(2):
@@ -208,6 +215,11 @@ while not board.game_over:
             pygame.time.wait(100)  # Adiciona um pequeno delay para tornar as jogadas visíveis
             if(algorithm_index == 0):
                 col = a_star.astar_algorithm(board, board.turn + 1)
+            if(algorithm_index == 1):
+                col = Mcts.mcts(board, 2,simulations = 8000)
+            if(algorithm_index == 2):
+                col = a_star.minimax(board,  5, True , 2)[1]
+
 
             if board.drop_pieces(board.turn + 1, col):
 
@@ -225,6 +237,12 @@ while not board.game_over:
 
         pygame.display.update()
 
+        
+
+pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
+
+
+pygame.quit()
         
 
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
