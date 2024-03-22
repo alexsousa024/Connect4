@@ -120,7 +120,7 @@ class Menu:
         screen.blit(title_text, title_rect)
 
         # Opções de algoritmo
-        algorithms = ["A*", "Monte Carlo", "Minimax"]
+        algorithms = ["A*", "Monte Carlo", "Minimax", "Negamax"]
         algorithm_rects = []
 
         for i, algorithm in enumerate(algorithms):
@@ -204,6 +204,10 @@ while not board.game_over:
 
                     col2 = a_star.minimax(board,  5, True , 2)[1]
                     print(col2)
+                
+                elif algorithm_index == 3:
+                    
+                    col2 = a_star.negamax(board,  5, True , 2)[1]
                     
                 if board.drop_pieces(2, col2):
                     if board.win(2):
@@ -219,6 +223,8 @@ while not board.game_over:
                 col = Mcts.mcts(board, 2,simulations = 8000)
             if(algorithm_index == 2):
                 col = a_star.minimax(board,  5, True , 2)[1]
+            
+
 
 
             if board.drop_pieces(board.turn + 1, col):
@@ -237,12 +243,6 @@ while not board.game_over:
 
         pygame.display.update()
 
-        
-
-pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
-
-
-pygame.quit()
         
 
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
