@@ -238,6 +238,7 @@ class Heuristica_AStar:
                     alpha = max(max_eval, alpha)
                     if alpha >= beta:
                         break
+            #print(player_move)
             return max_eval, player_move
         else:
             min_eval = float('inf')
@@ -256,7 +257,34 @@ class Heuristica_AStar:
                     beta = min(min_eval, beta)
                     if alpha >= beta:
                         break
+            #print(player_move)
             return min_eval, player_move
+    
+    def negamax(self, board, depth, player, alpha=float('-inf'), beta=float('inf')):
+        if depth == 0 or board.is_full() or board.win(player):
+            
+            return self.final_heuristic_1(board.board, 1, 2) * (-1 if player == 1 else 1), -1
+
+        max_eval = float('-inf')
+        player_move = -1
+
+        for col in range(COL_COUNT):
+            if board.valid_col(col):
+                new_board = copy.deepcopy(board)
+                new_board.drop_pieces(player, col)
+                eval, _ = self.negamax(new_board, depth - 1, 3 - player, -beta, -alpha)
+                eval = -eval  
+                
+                if eval > max_eval:
+                    max_eval = eval
+                    player_move = col
+
+                alpha = max(alpha, eval)
+                if alpha >= beta:
+                    break
+
+        return max_eval, player_move
+
 
 
 
@@ -298,6 +326,8 @@ class Node:
         possible_moves = self.generate_successors()
         for move in possible_moves: 
             self.children.append(move)
+
+        
     
 
     def select_child(self):
