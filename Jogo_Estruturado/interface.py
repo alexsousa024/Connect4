@@ -1,7 +1,7 @@
 import pygame
 import sys
 import math
-from Jogo1 import *
+from jogo import *
 # Initialize Pygame
 pygame.init()
 
@@ -172,6 +172,8 @@ elif mode_index == 2:
     print(algorithm_index2)
 
 alternate = 0
+
+Inicio.draw_algorithm_menu(screen, " ")
   
 # Main game loop
     
@@ -226,48 +228,63 @@ while not board.game_over:
                         print("CPU wins!")
                         board.game_over = True
                     board.turn = 1 - board.turn  # Troca para o turno do jogador
+        elif mode_index == 2:
+            break
 
-        elif mode_index == 2:  # CPU vs CPU
-            pygame.time.wait(100)  # Add a small delay to make moves visible
-            print("CPU vs CPU mode")
-
-            # Determine the algorithm for the current CPU player based on its turn
-            if board.turn == 0:
-                algorithm = algorithm_index
-            else:
-                algorithm = algorithm_index2
-            print("Selected algorithm for current CPU:", algorithm)
-
-            # Determine the column to play based on the selected algorithm
-            if algorithm == 0:
-                col = a_star.astar_algorithm(board, board.turn+1)
-            elif algorithm == 1:
-                col = Mcts.mcts(board, board.turn + 1, simulations=5000)
-            elif algorithm == 2:
-                pontuacao,col = a_star.minimax(board, 7, True, board.turn + 1)
-                print(pontuacao)
-                print(col)
-            elif algorithm == 3:
-                col = a_star.negamax(board, 7, True, board.turn + 1)[1]
-
-            print("BOARD TURN : ", board.turn)
-            print("Column selected by current CPU:", col)
-
-
-            
-            if board.drop_pieces(board.turn + 1, col):
-                if board.win(board.turn + 1):
-                    print(f"CPU {board.turn + 1} wins!")
-                    board.game_over = True
-                board.turn = 1 - board.turn  # Switch turns between the CPUs
 
     draw_board(board)
 
     if board.is_full():
         print("The game is a draw!")
         board.game_over = True
+        break
 
     pygame.display.update()
+        
+       
+    if mode_index == 2:  # CPU vs CPU
+        pygame.time.wait(2000)  # Add a small delay to make moves visible
+        print("CPU vs CPU mode")
+
+        # Determine the algorithm for the current CPU player based on its turn
+        if board.turn == 0:
+            algorithm = algorithm_index
+        else:
+            algorithm = algorithm_index2
+        print("Selected algorithm for current CPU:", algorithm)
+
+        # Determine the column to play based on the selected algorithm
+        if algorithm == 0:
+            col = a_star.astar_algorithm(board, board.turn+1)
+        elif algorithm == 1:
+            col = Mcts.mcts(board, board.turn + 1, simulations=5000)
+        elif algorithm == 2:
+            pontuacao,col = a_star.minimax(board, 7, True, board.turn + 1)
+            print(pontuacao)
+            print(col)
+        elif algorithm == 3:
+            col = a_star.negamax(board, 7, True, board.turn + 1)[1]
+
+        print("BOARD TURN : ", board.turn)
+        print("Column selected by current CPU:", col)
+
+
+        
+        if board.drop_pieces(board.turn + 1, col):
+            if board.win(board.turn + 1):
+                print(f"CPU {board.turn + 1} wins!")
+                board.game_over = True
+            board.turn = 1 - board.turn  # Switch turns between the CPUs
+            print("BOARD TURN CHANGED TO " , board.turn)
+
+        draw_board(board)
+
+        if board.is_full():
+            print("The game is a draw!")
+            board.game_over = True
+            break
+
+        pygame.display.update()
 
         
 
