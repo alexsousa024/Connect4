@@ -219,45 +219,46 @@ class Heuristica_AStar:
 
     def minimax(self, board, depth, maximizing_player, player, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or board.is_full() or board.win(player):
-            return self.final_heuristic_1(board.board, 1,2), -1
+            return self.final_heuristic_1(board.board, 3-player,player), -1
 
         if maximizing_player:
             max_eval = float('-inf')
-            player_move = -1
+            best_move = -1
 
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(player, col)
-                    eval, _ = self.minimax(new_board, depth - 1, False, 2, alpha, beta)
+                    # Evaluate the board for the opponent (minimizing player), hence '3 - player'.
+                    eval, _ = self.minimax(new_board, depth - 1, False, 3 - player, alpha, beta)
                     
                     if max_eval < eval:
-                        player_move = col
+                        best_move = col
                         max_eval = eval
-                    alpha = max(max_eval, alpha)
+                    alpha = max(alpha, eval)
                     if alpha >= beta:
                         break
-            
-            return max_eval, player_move
+                    
+            return max_eval, best_move
         else:
             min_eval = float('inf')
-            player_move = -1 
+            best_move = -1
 
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
-                    new_board.drop_pieces(3 - player, col)  # Other player's move
-                    eval, _ = self.minimax(new_board, depth - 1, True, 1, alpha, beta)
+                    new_board.drop_pieces(3 - player, col)  # Switch to the other player
+                    # Back to evaluating for the original player, as we're minimizing here.
+                    eval, _ = self.minimax(new_board, depth - 1, True, 3 - player, alpha, beta)
                     
                     if min_eval > eval:
-                        player_move = col
+                        best_move = col
                         min_eval = eval
-                    
-                    beta = min(min_eval, beta)
-                    if alpha >= beta:
+                    beta = min(beta, eval)
+                    if beta <= alpha:
                         break
-        
-            return min_eval, player_move
+                    
+            return min_eval, best_move
     
     def negamax(self, board, depth, player, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or board.is_full() or board.win(player):
