@@ -94,9 +94,9 @@ class Menu:
 
             pygame.display.update()
 
-    def algorithm_screen(self):
+    def algorithm_screen(self, message):
             running = True
-            mode_rects = self.draw_algorithm_menu(screen)
+            mode_rects = self.draw_algorithm_menu(screen, message)
 
             while running:
                 for event in pygame.event.get():
@@ -110,12 +110,13 @@ class Menu:
                                 return i  # Retorna o índice do modo selecionado
 
                 pygame.display.update()
-    def draw_algorithm_menu(self, screen):
+
+    def draw_algorithm_menu(self, screen, message):
         screen.fill((200, 200, 200))  # Fundo
 
         # Título do submenu
         title_font = pygame.font.SysFont("comicsansms", 40)
-        title_text = title_font.render("Escolha o Algoritmo", True, (0, 0, 0))
+        title_text = title_font.render(message , True, (0, 0, 0))
         title_rect = title_text.get_rect(center=(width // 2, 50))
         screen.blit(title_text, title_rect)
 
@@ -160,13 +161,23 @@ a_star = Heuristica_AStar()
 
 Mcts = monte_carlo_tree_search(); 
 
-if mode_index == 1 or mode_index == 2 or mode_index == 3:
-    algorithm_index = Inicio.algorithm_screen() 
-    print("ALGORITHM INDEX = " , algorithm_index)
+if mode_index == 1 :
+    algorithm_index = Inicio.algorithm_screen("Escolha o Algoritmo") 
+  
 
+elif mode_index == 2:
+    algorithm_index = Inicio.algorithm_screen("Escolha o 1º Algoritmo") 
+    print(algorithm_index)
+    algorithm_index2 = Inicio.algorithm_screen(" Agora escolha o 2º Algoritmo e aguarde...")
+    print(algorithm_index2)
+
+alternate = 0
+  
 # Main game loop
     
 while not board.game_over:
+    
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -197,7 +208,7 @@ while not board.game_over:
                     col2 = a_star.astar_algorithm(board, 2)
                 elif algorithm_index == 1: 
                     
-                    col2 = Mcts.mcts(board, 2,simulations = 8000)
+                    col2 = Mcts.mcts(board, 2,simulations = 9000)
 
                 elif algorithm_index == 2:
                     print("ENTREI")
@@ -216,32 +227,44 @@ while not board.game_over:
                     board.turn = 1 - board.turn  # Troca para o turno do jogador
 
         elif mode_index == 2:  # CPU vs CPU
-            pygame.time.wait(100)  # Adiciona um pequeno delay para tornar as jogadas visíveis
-            if(algorithm_index == 0):
-                col = a_star.astar_algorithm(board, board.turn + 1)
-            if(algorithm_index == 1):
-                col = Mcts.mcts(board, 2,simulations = 8000)
-            if(algorithm_index == 2):
-                col = a_star.minimax(board,  5, True , 2)[1]
+            pygame.time.wait(100)  # Add a small delay to make moves visible
+            print("CPU vs CPU mode")
+
+            # Determine the algorithm for the current CPU player based on its turn
+            if board.turn == 0:
+                algorithm = algorithm_index
+            else:
+                algorithm = algorithm_index2
+            print("Selected algorithm for current CPU:", algorithm)
+
+            # Determine the column to play based on the selected algorithm
+            if algorithm == 0:
+                col = a_star.astar_algorithm(board, board.turn )
+            elif algorithm == 1:
+                col = Mcts.mcts(board, board.turn + 1, simulations=8000)
+            elif algorithm == 2:
+                col = a_star.minimax(board, 5, True, board.turn + 1)[1]
+            elif algorithm == 3:
+                col = a_star.negamax(board, 5, True, board.turn + 1)[1]
+
+            print("BOARD TURN : ", board.turn)
+            print("Column selected by current CPU:", col)
+
+
             
-
-
-
             if board.drop_pieces(board.turn + 1, col):
-
                 if board.win(board.turn + 1):
-
                     print(f"CPU {board.turn + 1} wins!")
                     board.game_over = True
-                board.turn = 1 - board.turn  # Troca de turnos entre as CPUs
+                board.turn = 1 - board.turn  # Switch turns between the CPUs
 
-        draw_board(board)
+    draw_board(board)
 
-        if board.is_full():
-            print("The game is a draw!")
-            board.game_over = True
+    if board.is_full():
+        print("The game is a draw!")
+        board.game_over = True
 
-        pygame.display.update()
+    pygame.display.update()
 
         
 
