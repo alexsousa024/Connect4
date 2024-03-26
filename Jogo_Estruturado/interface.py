@@ -1,7 +1,7 @@
 import pygame
 import sys
 import math
-from jogo import *
+from Jogo1 import *
 # Initialize Pygame
 pygame.init()
 
@@ -208,17 +208,18 @@ while not board.game_over:
                     col2 = a_star.astar_algorithm(board, 2)
                 elif algorithm_index == 1: 
                     
-                    col2 = Mcts.mcts(board, 2,simulations = 9000)
+                    col2 = Mcts.mcts(board, 2,simulations = 5000)
 
                 elif algorithm_index == 2:
                     print("ENTREI")
 
-                    col2 = a_star.minimax(board,  5, True , 2)[1]
+                    pontuacao,col2 = a_star.minimax(board,  5, True , board.turn + 1)
+                    print(pontuacao)
                     print(col2)
                 
                 elif algorithm_index == 3:
                     
-                    col2 = a_star.negamax(board,  5, True , 2)[1]
+                    col2 = a_star.negamax(board,  5, True , board.turn +1)[1]
                     
                 if board.drop_pieces(2, col2):
                     if board.win(2):
@@ -239,13 +240,15 @@ while not board.game_over:
 
             # Determine the column to play based on the selected algorithm
             if algorithm == 0:
-                col = a_star.astar_algorithm(board, board.turn )
+                col = a_star.astar_algorithm(board, board.turn+1)
             elif algorithm == 1:
-                col = Mcts.mcts(board, board.turn + 1, simulations=8000)
+                col = Mcts.mcts(board, board.turn + 1, simulations=5000)
             elif algorithm == 2:
-                col = a_star.minimax(board, 5, True, board.turn + 1)[1]
+                pontuacao,col = a_star.minimax(board, 7, True, board.turn + 1)
+                print(pontuacao)
+                print(col)
             elif algorithm == 3:
-                col = a_star.negamax(board, 5, True, board.turn + 1)[1]
+                col = a_star.negamax(board, 7, True, board.turn + 1)[1]
 
             print("BOARD TURN : ", board.turn)
             print("Column selected by current CPU:", col)
