@@ -67,13 +67,12 @@ class Board:
 
 class Heuristica_AStar: 
     
-    def Scores(self,window):
+    def Scores(self,window,player_1, player_2):
             score = 0
             # Contar vitórias absolutas
         
             #Mudar para float pq é como está o array numpy 
-            player_1 = 1.0
-            player_2 = 2.0
+            
             if np.count_nonzero(window == player_2) == 4:
                 score += 5120  # Vitória absoluta para o player_2 
                 
@@ -124,7 +123,7 @@ class Heuristica_AStar:
         
                 
         #Funcao  de heurística #1 - Jananlas de 4 em 4 
-    def evaluate_function_1(self,board):
+    def evaluate_function_1(self,board,player_1,player_2):
             score = 0
             
             #horizontalmente
@@ -132,7 +131,7 @@ class Heuristica_AStar:
                 for c in range(COL_COUNT - 3): 
                     window = board[r][c:c+4]
                     
-                    score += self.Scores(window)
+                    score += self.Scores(window,player_1,player_2)
             
         
             #verticalmente
@@ -140,25 +139,25 @@ class Heuristica_AStar:
                 for c in range(COL_COUNT): 
                     window = np.array([board[r+i][c] for i in range(4)])
                     
-                    score += self.Scores(window)
+                    score += self.Scores(window,player_1,player_2)
 
             #diagonalente com declive negativo 
             for r in range(ROW_COUNT-3):
                 for c in range(COL_COUNT-3):
                     window = np.array([board[r+i][c+i] for i in range(4)])
-                    score += self.Scores(window)
+                    score += self.Scores(window,player_1,player_2)
 
         # diagonalmente com declive positivo 
             for r in range(ROW_COUNT-3):
                 for c in range(COL_COUNT-1, 2, -1):
                     window = np.array([board[r+i][c-i] for i in range(4)])
-                    score += self.Scores(window)
+                    score += self.Scores(window,player_1,player_2)
 
             return score
         
     def final_heuristic_1(self,board,player_1, player_2):
 
-            eval_score = self.evaluate_function_1(board)
+            eval_score = self.evaluate_function_1(board,player_1,player_2)
             board_score = self.board_evaluation(board,player_1,player_2)
             total_score = eval_score + board_score                           
             return total_score
@@ -174,7 +173,7 @@ class Heuristica_AStar:
             _, current_board, move = open_list.pop(0)  # Remove o item com menor custo heurístico
             # Verifica se o movimento atual é melhor do que o melhor encontrado até agora
         
-            current_score = self.final_heuristic_1(current_board.board,1,2)
+            current_score = self.final_heuristic_1(current_board.board,3-player,player)
             
             #print(current_score)
             if current_score > best_score:
@@ -194,7 +193,7 @@ class Heuristica_AStar:
                 # Calcula o custo heurístico para o sucessor
                 #print(successor)
             
-                heuristic = self.final_heuristic_1(successor,1, player)
+                heuristic = self.final_heuristic_1(successor,3-player, player)
                 print(str(i) + " : " + str(heuristic))
                 i += 1
                 # Adiciona o sucessor à lista aberta
@@ -220,7 +219,7 @@ class Heuristica_AStar:
 
     def minimax(self, board, depth, maximizing_player, player, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or board.is_full() or board.win(player):
-            return self.final_heuristic_1(board.board, 1, 2), -1
+            return self.final_heuristic_1(board.board, 1,2), -1
 
         if maximizing_player:
             max_eval = float('-inf')
@@ -230,7 +229,7 @@ class Heuristica_AStar:
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(player, col)
-                    eval, _ = self.minimax(new_board, depth - 1, False, player, alpha, beta)
+                    eval, _ = self.minimax(new_board, depth - 1, False, 2, alpha, beta)
                     
                     if max_eval < eval:
                         player_move = col
@@ -238,7 +237,7 @@ class Heuristica_AStar:
                     alpha = max(max_eval, alpha)
                     if alpha >= beta:
                         break
-            #print(player_move)
+            
             return max_eval, player_move
         else:
             min_eval = float('inf')
@@ -248,7 +247,7 @@ class Heuristica_AStar:
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(3 - player, col)  # Other player's move
-                    eval, _ = self.minimax(new_board, depth - 1, True, player, alpha, beta)
+                    eval, _ = self.minimax(new_board, depth - 1, True, 1, alpha, beta)
                     
                     if min_eval > eval:
                         player_move = col
@@ -257,7 +256,7 @@ class Heuristica_AStar:
                     beta = min(min_eval, beta)
                     if alpha >= beta:
                         break
-            #print(player_move)
+        
             return min_eval, player_move
     
     def negamax(self, board, depth, player, alpha=float('-inf'), beta=float('inf')):
@@ -423,6 +422,6 @@ class monte_carlo_tree_search:
             current_player = 1 if current_player == 2 else 2  # Switch player
         
         if simulated_game.win(current_player):
-            return 1 if current_player == 2 else 0
+            return 1 if current_player == player else 0
         else:
             return 0.5  # Consider draw as half a win
