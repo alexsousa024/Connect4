@@ -74,11 +74,11 @@ class Heuristica_AStar:
             #Mudar para float pq é como está o array numpy 
             
             if np.count_nonzero(window == player_2) == 4:
-                score += 5120  # Vitória absoluta para o player_2 
+                score += 100000  # Vitória absoluta para o player_2 
                 
             elif np.count_nonzero(window == player_1) == 4:
                 
-                score -= 5120  # Vitória absoluta para o player_1
+                score -= 50000  # Vitória absoluta para o player_1
 
             # Adaptação dos demais cálculos usando np.count_nonzero
             if np.count_nonzero(window == player_1) == 3 and np.count_nonzero(window == player_2) == 0: 
@@ -94,7 +94,7 @@ class Heuristica_AStar:
                 score += 100
             elif np.count_nonzero(window == player_1) == 0 and np.count_nonzero(window == player_2) == 3: 
                 score += 500
-
+    
             return score
 
 
@@ -114,9 +114,9 @@ class Heuristica_AStar:
             for r in range(ROW_COUNT):
                 for c in range(COL_COUNT):
                     if board[r][c] == player_1:  # Posição ocupada pelo jogador 1
-                        player_score -= 5* board_score_matrix[r][c]
+                        player_score -= board_score_matrix[r][c]
                     elif board[r][c] == player_2:  # Posição ocupada pelo jogador 2
-                        player_score += 5 * board_score_matrix[r][c]
+                        player_score += board_score_matrix[r][c]
             
             return player_score
 
@@ -217,52 +217,60 @@ class Heuristica_AStar:
                     sucessors.append((new_board.board,col))
             return sucessors
 
-     def minimax(self, board, depth, player_1, player_2, current_player, alpha=float('-inf'), beta=float('inf')):
-        # Determina se o jogador atual está maximizando ou minimizando
+    def minimax(self, board, depth, player_1, player_2, current_player, alpha=float('-inf'), beta=float('inf')):
+        
         maximizing_player = current_player == player_2
         
+    
         if depth == 0 or board.is_full() or board.win(current_player):
-            # Avalia o tabuleiro do ponto de vista do player_2 (maximizador)
-            return self.final_heuristic_1(board.board, player_1, player_2), -1
-        
+            score = self.final_heuristic_1(board.board, player_1, player_2)
+            return score, -1
+            
         if maximizing_player:
-            max_eval = float('-inf')
+            best = float('-inf')
             best_move = -1
             
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(current_player, col)
-                    # Passa a vez para o player_1 (minimizador)
                     eval, _ = self.minimax(new_board, depth - 1, player_1, player_2, player_1, alpha, beta)
                     
-                    if eval > max_eval:
+                    if eval > best:
                         best_move = col
-                        max_eval = eval
-                    alpha = max(alpha, eval)
+                        best = eval
+                    
+                    alpha = max(alpha, best)
+                    
                     if alpha >= beta:
                         break
-                    
-            return max_eval, best_move
+                        
+            return best, best_move
         else:
-            min_eval = float('inf')
+            best = float('inf')
             best_move = -1
             
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(current_player, col)
-                    # Passa a vez para o player_2 (maximizador)
                     eval, _ = self.minimax(new_board, depth - 1, player_1, player_2, player_2, alpha, beta)
                     
-                    if eval < min_eval:
+                    if eval < best:
                         best_move = col
-                        min_eval = eval
-                    beta = min(beta, eval)
-                    if beta <= alpha:
-                        break
+                        best = eval
                     
-            return min_eval, best_move
+                    beta = min(beta, best)
+                   
+                    
+                    if beta <= alpha:
+                        
+                        break
+                        
+            return best, best_move
+
+
+
     
     def negamax(self, board, depth, player, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or board.is_full() or board.win(player):
