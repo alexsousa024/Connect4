@@ -217,22 +217,26 @@ class Heuristica_AStar:
                     sucessors.append((new_board.board,col))
             return sucessors
 
-    def minimax(self, board, depth, maximizing_player, player, alpha=float('-inf'), beta=float('inf')):
-        if depth == 0 or board.is_full() or board.win(player):
-            return self.final_heuristic_1(board.board, 3-player,player), -1
-
+     def minimax(self, board, depth, player_1, player_2, current_player, alpha=float('-inf'), beta=float('inf')):
+        # Determina se o jogador atual está maximizando ou minimizando
+        maximizing_player = current_player == player_2
+        
+        if depth == 0 or board.is_full() or board.win(current_player):
+            # Avalia o tabuleiro do ponto de vista do player_2 (maximizador)
+            return self.final_heuristic_1(board.board, player_1, player_2), -1
+        
         if maximizing_player:
             max_eval = float('-inf')
             best_move = -1
-
+            
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
-                    new_board.drop_pieces(player, col)
-                    # Evaluate the board for the opponent (minimizing player), hence '3 - player'.
-                    eval, _ = self.minimax(new_board, depth - 1, False, 3 - player, alpha, beta)
+                    new_board.drop_pieces(current_player, col)
+                    # Passa a vez para o player_1 (minimizador)
+                    eval, _ = self.minimax(new_board, depth - 1, player_1, player_2, player_1, alpha, beta)
                     
-                    if max_eval < eval:
+                    if eval > max_eval:
                         best_move = col
                         max_eval = eval
                     alpha = max(alpha, eval)
@@ -243,15 +247,15 @@ class Heuristica_AStar:
         else:
             min_eval = float('inf')
             best_move = -1
-
+            
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
-                    new_board.drop_pieces(3 - player, col)  # Switch to the other player
-                    # Back to evaluating for the original player, as we're minimizing here.
-                    eval, _ = self.minimax(new_board, depth - 1, True, 3 - player, alpha, beta)
+                    new_board.drop_pieces(current_player, col)
+                    # Passa a vez para o player_2 (maximizador)
+                    eval, _ = self.minimax(new_board, depth - 1, player_1, player_2, player_2, alpha, beta)
                     
-                    if min_eval > eval:
+                    if eval < min_eval:
                         best_move = col
                         min_eval = eval
                     beta = min(beta, eval)
