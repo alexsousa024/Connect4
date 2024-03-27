@@ -252,10 +252,14 @@ while not board.game_over:
                 col = a_star.astar_algorithm(board, current_player)
             elif algorithm == 1:
                 col = Mcts.mcts(board, current_player, simulations=5000)
-            elif algorithm == 2:
-                _, col = a_star.minimax(board, 6, player_1, player_2, current_player)
+            elif algorithm == 2 and current_player == 1:
+                _, col = a_star.minimax(board, 5, player_1, player_2, current_player)
+
+            elif algorithm == 2 and current_player == 2:
+                _, col = a_star.minimax(board, 5, player_2,player_1, current_player)
+
             elif algorithm == 3:
-                col = a_star.negamax(board, 5, current_player == player_2, player_1, player_2, current_player)[1]
+                col = a_star.negamax(board, 7, current_player == player_2, player_1, player_2, current_player)[1]
 
             print(f"BOARD TURN: {board.turn}, Column selected by CPU {current_player}: {col}")
 
@@ -274,12 +278,6 @@ while not board.game_over:
 
             pygame.display.update()
 
-        
-
-pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
-
-
-pygame.quit()
         
 
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
