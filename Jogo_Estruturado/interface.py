@@ -217,9 +217,9 @@ while not board.game_over:
                 elif algorithm_index == 1:
                     col = Mcts.mcts(board, current_player, simulations=5000)
                 elif algorithm_index == 2:
-                    _, col = a_star.minimax(board, 5, player_1, player_2, current_player)
+                    _, col = a_star.minimax(board, 7, player_1, player_2, current_player)
                 elif algorithm_index == 3:
-                    col = a_star.negamax(board, 7, current_player == player_2, player_1, player_2, current_player)[1]
+                    col = a_star.negamax(board, 5,current_player)[1]
 
                 if board.drop_pieces(current_player, col):
                     if board.win(current_player):
@@ -251,15 +251,19 @@ while not board.game_over:
             if algorithm == 0:
                 col = a_star.astar_algorithm(board, current_player)
             elif algorithm == 1:
-                col = Mcts.mcts(board, current_player, simulations=5000)
+                col = Mcts.mcts(board, current_player, simulations=10000)
             elif algorithm == 2 and current_player == 1:
-                _, col = a_star.minimax(board, 5, player_1, player_2, current_player)
+                pont, col = a_star.minimax(board, 5, player_2, player_1, current_player)
+                print("Pontuacao:")
+                print(pont)
+
 
             elif algorithm == 2 and current_player == 2:
-                _, col = a_star.minimax(board, 5, player_2,player_1, current_player)
-
+                pont, col = a_star.minimax(board, 5, player_2,player_1, current_player)
+                print("Pontuacao:")
+                print(pont)
             elif algorithm == 3:
-                col = a_star.negamax(board, 7, current_player == player_2, player_1, player_2, current_player)[1]
+                col = a_star.negamax(board, 5, current_player)[1]
 
             print(f"BOARD TURN: {board.turn}, Column selected by CPU {current_player}: {col}")
 
