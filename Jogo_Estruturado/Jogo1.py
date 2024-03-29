@@ -218,56 +218,40 @@ class Heuristica_AStar:
             return sucessors
 
     def minimax(self, board, depth, player_1, player_2, current_player, alpha=float('-inf'), beta=float('inf')):
-        
+        if board.is_full() or board.win(player_1) or board.win(player_2) or depth == 0:
+            return self.final_heuristic_1(board.board, player_1, player_2), -1
+
         maximizing_player = current_player == player_2
-        
-    
-        if depth == 0 or board.is_full() or board.win(current_player):
-            score = self.final_heuristic_1(board.board, player_1, player_2)
-            return score, -1
-            
         if maximizing_player:
-            best = float('-inf')
-            best_move = -1
-            
+            max_eval = float('-inf')
+            best_col = None
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(current_player, col)
                     eval, _ = self.minimax(new_board, depth - 1, player_1, player_2, player_1, alpha, beta)
-                    
-                    if eval > best:
-                        best_move = col
-                        best = eval
-                    
-                    alpha = max(alpha, best)
-                    
-                    if alpha >= beta:
+                    if eval > max_eval:
+                        max_eval = eval
+                        best_col = col
+                    alpha = max(alpha, eval)
+                    if beta <= alpha:
                         break
-                        
-            return best, best_move
-        else:
-            best = float('inf')
-            best_move = -1
-            
+            return max_eval, best_col
+        else:  # Minimizing player
+            min_eval = float('inf')
+            best_col = None
             for col in range(COL_COUNT):
                 if board.valid_col(col):
                     new_board = copy.deepcopy(board)
                     new_board.drop_pieces(current_player, col)
                     eval, _ = self.minimax(new_board, depth - 1, player_1, player_2, player_2, alpha, beta)
-                    
-                    if eval < best:
-                        best_move = col
-                        best = eval
-                    
-                    beta = min(beta, best)
-                   
-                    
+                    if eval < min_eval:
+                        min_eval = eval
+                        best_col = col
+                    beta = min(beta, eval)
                     if beta <= alpha:
-                        
                         break
-                        
-            return best, best_move
+            return min_eval, best_col
 
 
 
