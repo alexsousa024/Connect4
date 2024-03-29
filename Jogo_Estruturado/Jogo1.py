@@ -78,7 +78,7 @@ class Heuristica_AStar:
                 
             elif np.count_nonzero(window == player_1) == 4:
                 
-                score -= 50000  # Vitória absoluta para o player_1
+                score -= 100000  # Vitória absoluta para o player_1
 
             # Adaptação dos demais cálculos usando np.count_nonzero
             if np.count_nonzero(window == player_1) == 3 and np.count_nonzero(window == player_2) == 0: 
@@ -217,6 +217,8 @@ class Heuristica_AStar:
                     sucessors.append((new_board.board,col))
             return sucessors
 
+    
+
     def minimax(self, board, depth, player_1, player_2, current_player, alpha=float('-inf'), beta=float('inf')):
         if board.is_full() or board.win(player_1) or board.win(player_2) or depth == 0:
             return self.final_heuristic_1(board.board, player_1, player_2), -1
@@ -252,11 +254,14 @@ class Heuristica_AStar:
                     if beta <= alpha:
                         break
             return min_eval, best_col
+        
+    # Assuming other methods (is_full, win, valid_col, drop_pieces) are defined elsewhere within your class.
+
 
 
 
     
-    def negamax(self, board, depth, player, alpha=float('-inf'), beta=float('inf')):
+    def negamax(self, board, depth,player, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or board.is_full() or board.win(player):
             
             return self.final_heuristic_1(board.board, 1, 2) * (-1 if player == 1 else 1), -1
@@ -336,7 +341,7 @@ class Node:
             if child.visits == 0:
                 unvisited_children.append(child)
             else:
-                exploration_term = math.sqrt(math.log(self.visits +1) / child.visits)
+                exploration_term = math.sqrt((math.log(self.visits+1)*2) / child.visits)
                 score = child.wins / child.visits + C * exploration_term
                 if  score == best_score:
                     best_score = score
@@ -354,9 +359,10 @@ class Node:
         if self.parent is not None:
             self.parent.backpropagate(result)
 
+
 class monte_carlo_tree_search:
 
-    def mcts(self, board, player, simulations=500):
+    def mcts(self, board, player, simulations):
 
        # Passo 1: Inicialize a árvore
         root = Node(board, player)
@@ -405,7 +411,6 @@ class monte_carlo_tree_search:
         
         # Retorna o movimento do melhor filho
         return best_move
-       
         
     
     def simulate_random_playout(self, game_state, player):
