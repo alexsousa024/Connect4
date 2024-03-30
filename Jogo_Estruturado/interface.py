@@ -33,7 +33,7 @@ def draw_board(board):
                 pygame.draw.circle(screen, YELLOW, (int(c * SQUARESIZE + SQUARESIZE / 2), int((r+1)* SQUARESIZE + SQUARESIZE / 2))  , RADIUS)
     pygame.display.update()
 
-C = math.sqrt(2)
+
 
 
 
@@ -159,7 +159,6 @@ mode_index = Inicio.menu_screen()
 
 a_star = Heuristica_AStar()
 
-Mcts = monte_carlo_tree_search(); 
 
 if mode_index == 1 :
     algorithm_index = Inicio.algorithm_screen("Escolha o Algoritmo") 
@@ -215,9 +214,10 @@ while not board.game_over:
                 if algorithm_index == 0:
                     col = a_star.astar_algorithm(board, current_player)
                 elif algorithm_index == 1:
-                    col = Mcts.mcts(board, current_player, simulations=5000)
+                    mcts = monte_carlo_tree_search()
+                    col = mcts.mcts(board,current_player,10000)
                 elif algorithm_index == 2:
-                    _, col = a_star.minimax(board, 7, player_1, player_2, current_player)
+                    _, col = a_star.minimax(board, 5, player_1, player_2, current_player)
                 elif algorithm_index == 3:
                     col = a_star.negamax(board, 5,current_player)[1]
 
@@ -251,7 +251,8 @@ while not board.game_over:
             if algorithm == 0:
                 col = a_star.astar_algorithm(board, current_player)
             elif algorithm == 1:
-                col = Mcts.mcts(board, current_player, simulations=10000)
+                mcts = monte_carlo_tree_search()
+                col = mcts.mcts(board,current_player,10000)
             elif algorithm == 2 and current_player == 1:
                 pont, col = a_star.minimax(board, 5, player_2, player_1, current_player)
                 print("Pontuacao:")
@@ -287,4 +288,4 @@ while not board.game_over:
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
 
 
-pygame.quit()
+pygame.quit()   
