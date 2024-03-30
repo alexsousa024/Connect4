@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import math 
 import random
+import time
 
 # Game settings
 ROW_COUNT = 6
@@ -60,6 +61,17 @@ class Board:
 
     def is_full(self):
         return np.all(self.column_heights < 0)
+    
+    def is_winning_move(self, player, col):
+        # Check if placing a piece in the column results in a win for the player
+        # Make a temporary move on the board
+        for row in range(ROW_COUNT):
+            if self.board[row][col] == 0:  # Find the first empty slot in the column
+                self.board[row][col] = player
+                win = self.win(player)
+                self.board[row][col] = 0  # Undo the temporary move
+                return win
+        return False
 
     def print_board(self):
 
@@ -289,8 +301,6 @@ class Heuristica_AStar:
 
 
 
-
-
 C = math.sqrt(2)
 class Node:
     def __init__(self, board, player, move = None , parent=None):
@@ -304,7 +314,7 @@ class Node:
         self.player = player
 
     def is_leaf(self):
-        if self.board.is_full() or self.board.win(self.player):
+        if (len(self.children) == 0):
             return True
         else:
             return False
@@ -327,9 +337,6 @@ class Node:
         possible_moves = self.generate_successors()
         for move in possible_moves: 
             self.children.append(move)
-
-        
-    
 
     def select_child(self):
         
@@ -385,12 +392,10 @@ class monte_carlo_tree_search:
             while not node.is_leaf():
                 if node.is_fully_expanded():
                     node = node.select_child()
-                else:
-                    # Expansion
-
-                    node.expand()
-                    break
-
+                
+            if(node.visits >0):
+                node.expand()
+    
             # Simulation
             result = self.simulate_random_playout(node.board, player)
 
@@ -421,9 +426,11 @@ class monte_carlo_tree_search:
             possible_moves = [col for col in range(COL_COUNT) if simulated_game.valid_col(col)]
             move = random.choice(possible_moves)
             simulated_game.drop_pieces(current_player, move)
+            if simulated_game.win(current_player):
+                return 1 if current_player == player else 0
             current_player = 1 if current_player == 2 else 2  # Switch player
         
         if simulated_game.win(current_player):
             return 1 if current_player == player else 0
         else:
-            return 0.5  # Consider draw as half a win
+            return 0.5 # Consider draw as half a win
