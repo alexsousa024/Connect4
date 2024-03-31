@@ -277,12 +277,18 @@ while not board.game_over:
             draw_board(board)
 
             if board.is_full():
-                print("The game is a draw!")
+                print("The game is a draw!") 
                 board.game_over = True
                 break
 
             pygame.display.update()
 
+        
+
+pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
+
+
+pygame.quit()   
         
 
 pygame.time.wait(3000)  # Espera um pouco antes de fechar o jogo
