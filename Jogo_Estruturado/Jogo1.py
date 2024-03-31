@@ -301,7 +301,7 @@ class Heuristica_AStar:
 
 
 
-C = math.sqrt(2)
+C = 0.5
 class Node:
     def __init__(self, board, player, move = None , parent=None):
         assert isinstance(board, Board)
@@ -314,7 +314,7 @@ class Node:
         self.player = player
 
     def is_leaf(self):
-        if (len(self.children) == 0):
+        if (len(self.children) == 0) or self.board.win(1) or self.board.win(2) or self.board.is_full():
             return True
         else:
             return False
@@ -334,9 +334,26 @@ class Node:
         return len(possible_moves) == len(self.children)
     
     def expand(self):
-        possible_moves = self.generate_successors()
-        for move in possible_moves: 
-            self.children.append(move)
+        # Identifica as jogadas possíveis que ainda não foram exploradas
+        unexplored_moves = [col for col in range(COL_COUNT) if self.board.valid_col(col) and all(col != child.move for child in self.children)]
+        
+        if unexplored_moves:
+            # Escolhe uma jogada não explorada aleatoriamente para a expansão
+            move = random.choice(unexplored_moves)
+            
+            # Cria uma cópia do estado do tabuleiro e aplica a jogada escolhida
+            new_board = copy.deepcopy(self.board)
+            new_board.drop_pieces(self.player, move)
+            
+            # Cria um novo nó filho com o estado resultante e adiciona à lista de filhos
+            new_node = Node(board=new_board, player=self.player, move=move, parent=self)
+            self.children.append(new_node)
+            
+            # Retorna o novo nó para que seja utilizado na simulação
+            return new_node
+        
+        # Retorna None se não houver mais movimentos não exploradoss
+        return None
 
     def select_child(self):
         
@@ -381,33 +398,29 @@ class monte_carlo_tree_search:
             for _ in range(initial_simulations_per_node):
                 result = self.simulate_random_playout(initial_node.board, player)
                 initial_node.backpropagate(result)
-        
     
-
-        
         for _ in range(simulations):
+            
             node = root
             # Selection
-            
             while not node.is_leaf():
-                if node.is_fully_expanded():
+                if not node.is_fully_expanded():
+                    node = node.expand()
+                    break
+                else:
                     node = node.select_child()
                 
-            if(node.visits >0):
-                node.expand()
-    
-            # Simulation
-            result = self.simulate_random_playout(node.board, player)
+            if node is not None:
+                result = self.simulate_random_playout(node.board, player)
 
-
-            node.backpropagate(result)
+                node.backpropagate(result)
 
         best_ratio = -float("inf")
         best_move = None
         for child in root.children:
             if child.visits > 0:
                 ratio = child.wins / child.visits
-                print(ratio)
+                print(f"{ratio} Coluna: {child.move}")
             else:
                 ratio = 0
             if ratio > best_ratio:
