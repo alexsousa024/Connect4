@@ -348,7 +348,7 @@ def monte_carlo_tree_search(board, player, simulations):
     for child in root.children:
         if child.visits > 0:
             ratio = child.wins / child.visits
-            print(f"{ratio} Coluna: {child.move}")
+            
         else:
             ratio = 0
         if ratio > best_ratio:
