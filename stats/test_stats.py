@@ -2,8 +2,7 @@ import numpy as np
 import copy
 import math 
 import random
-import pygame
-import sys
+
 
 
 # Game settings
@@ -232,7 +231,7 @@ def generate_sucessors(board,player):
                 sucessors.append((new_board.board,col))
         return sucessors
 
-C = 0.5
+C = math.sqrt(2)
 class Node:
     def __init__(self, board, player, move = None , parent=None):
         assert isinstance(board, Board)
@@ -245,7 +244,7 @@ class Node:
         self.player = player
 
     def is_leaf(self):
-        if (len(self.children) == 0) or self.board.win(1) or self.board.win(2) or self.board.is_full():
+        if (len(self.children) == 0):
             return True
         else:
             return False
@@ -254,7 +253,7 @@ class Node:
         successors = []
         for col in range(COL_COUNT):
             if self.board.valid_col(col):
-                new_board = copy.deepcopy(self.board)
+                new_board = copy.deepcopy(self.board) 
                 new_board.drop_pieces(self.player, col)
                 successors.append(Node(new_board, self.player, col, self))
         return successors
@@ -277,7 +276,7 @@ class Node:
             new_board.drop_pieces(self.player, move)
             
             # Cria um novo nó filho com o estado resultante e adiciona à lista de filhos
-            new_node = Node(board=new_board, player=self.player, move=move, parent=self)
+            new_node = Node(board=new_board, player= 3 -self.player, move=move, parent=self)
             self.children.append(new_node)
             
             # Retorna o novo nó para que seja utilizado na simulação
@@ -315,28 +314,22 @@ class Node:
             self.parent.backpropagate(result)
 
 def monte_carlo_tree_search(board, player, simulations):
-
     # Passo 1: Inicialize a árvore
     root = Node(board, player)
-    root.expand()  # Isso gera os primeiros sucessores (os 7 nós, assumindo um tabuleiro de Connect Four)
+
+    for h in range(6):
+        root.expand()   
     
-    # Passo 2: Simulações iniciais para os primeiros nós
-    initial_simulations_per_node = 5
-    for initial_node in root.children[:7]:  # Assumindo que você quer fazer isso apenas para os primeiros 7 nós
-        for _ in range(initial_simulations_per_node):
-            result = simulate_random_playout(initial_node.board, player)
-            initial_node.backpropagate(result)
 
     for _ in range(simulations):
         
         node = root
         # Selection
         while not node.is_leaf():
-            if not node.is_fully_expanded():
-                node = node.expand()
-                break
-            else:
+            if node.is_fully_expanded():
                 node = node.select_child()
+            else: 
+                node = node.expand()
             
         if node is not None:
             result = simulate_random_playout(node.board, player)
@@ -348,7 +341,7 @@ def monte_carlo_tree_search(board, player, simulations):
     for child in root.children:
         if child.visits > 0:
             ratio = child.wins / child.visits
-            
+            print(f"{ratio} Coluna: {child.move} Numero de Vitorias: {child.wins} Numero de Visitas: {child.visits}")
         else:
             ratio = 0
         if ratio > best_ratio:
@@ -357,8 +350,8 @@ def monte_carlo_tree_search(board, player, simulations):
     
     # Retorna o movimento do melhor filho
     return best_move
+        
     
-
 def simulate_random_playout(game_state, player):
     simulated_game = copy.deepcopy(game_state)
     current_player = player
@@ -413,8 +406,8 @@ def minimax(board, depth, player_1, player_2, current_player, alpha=float('-inf'
         return min_eval, best_col
 
 def negamax(board, depth,player, alpha=float('-inf'), beta=float('inf')):
-    if depth == 0 or board.is_full() or board.win(player):
-        
+    if depth == 0 or board.is_full() or board.win(player) or board.win(3-player):
+
         return heuristic.final_heuristic(board.board, 1, 2) * (-1 if player == 1 else 1), -1
 
     max_eval = float('-inf')
@@ -424,9 +417,9 @@ def negamax(board, depth,player, alpha=float('-inf'), beta=float('inf')):
         if board.valid_col(col):
             new_board = copy.deepcopy(board)
             new_board.drop_pieces(player, col)
-            eval, _ = negamax(new_board, depth - 1, 3 - player, -beta, -alpha)
-            eval = -eval  
-            
+            eval  = negamax(new_board, depth - 1, 3 - player, -beta, -alpha)[0]
+            eval = -eval
+
             if eval > max_eval:
                 max_eval = eval
                 player_move = col
